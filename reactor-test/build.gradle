@@ -37,16 +37,16 @@ ext {
 }
 
 dependencies {
-	compile project(":reactor-core")
+	api project(":reactor-core")
 
-	optional "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"
+	implementation "org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}"
 
-	testCompile "junit:junit:$jUnitVersion"
+	testImplementation "junit:junit:$jUnitVersion"
 
-	testRuntime "ch.qos.logback:logback-classic:$logbackVersion"
+	testRuntimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
 
-	testCompile "org.assertj:assertj-core:$assertJVersion"
-	testCompile "org.mockito:mockito-core:$mockitoVersion"
+	testImplementation "org.assertj:assertj-core:$assertJVersion"
+	testImplementation "org.mockito:mockito-core:$mockitoVersion"
 }
 
 task downloadBaseline(type: Download) {
