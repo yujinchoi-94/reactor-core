@@ -103,14 +103,14 @@ class UnicastManySinkNoBackpressureTest {
 	void beforeSubscriberEmitNextIsIgnoredKeepsSinkOpen() {
 		Sinks.Many<Object> sink = UnicastManySinkNoBackpressure.create();
 
-		sink.emitNext("hi");
+		EmitHelper.failFast().emitNext(sink, "hi");
 
 		StepVerifier.create(sink.asFlux())
 		            .expectSubscription()
 		            .expectNoEvent(Duration.ofMillis(500))
 		            .then(() -> {
-		            	sink.emitNext("second");
-		            	sink.emitComplete();
+		            	EmitHelper.failFast().emitNext(sink, "second");
+		            	EmitHelper.failFast().emitComplete(sink);
 		            })
 		            .expectNext("second")
 		            .verifyComplete();

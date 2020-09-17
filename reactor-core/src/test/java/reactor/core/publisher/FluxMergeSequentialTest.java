@@ -150,19 +150,19 @@ public class FluxMergeSequentialTest {
 										   .flatMapSequentialDelayError(t -> inner.asFlux(), 32, 32)
 		                                   .subscribeWith(AssertSubscriber.create());
 
-		main.emitNext(1);
-		main.emitNext(2);
+		EmitHelper.failFast().emitNext(main, 1);
+		EmitHelper.failFast().emitNext(main, 2);
 
-		inner.emitNext(2);
+		EmitHelper.failFast().emitNext(inner, 2);
 
 		ts.assertValues(2);
 
-		main.emitError(new RuntimeException("Forced failure"));
+		EmitHelper.failFast().emitError(main, new RuntimeException("Forced failure"));
 
 		ts.assertNoError();
 
-		inner.emitNext(3);
-		inner.emitComplete();
+		EmitHelper.failFast().emitNext(inner, 3);
+		EmitHelper.failFast().emitComplete(inner);
 
 		ts.assertValues(2, 3, 2, 3)
 		  .assertErrorMessage("Forced failure");
@@ -176,19 +176,19 @@ public class FluxMergeSequentialTest {
 		AssertSubscriber<Integer> ts = main.asFlux().flatMapSequential(t -> inner.asFlux())
 		                                   .subscribeWith(AssertSubscriber.create());
 
-		main.emitNext(1);
-		main.emitNext(2);
+		EmitHelper.failFast().emitNext(main, 1);
+		EmitHelper.failFast().emitNext(main, 2);
 
-		inner.emitNext(2);
+		EmitHelper.failFast().emitNext(inner, 2);
 
 		ts.assertValues(2);
 
-		main.emitError(new RuntimeException("Forced failure"));
+		EmitHelper.failFast().emitError(main, new RuntimeException("Forced failure"));
 
 		assertFalse("inner has subscribers?", Scannable.from(inner).inners().count() != 0);
 
-		inner.emitNext(3);
-		inner.emitComplete();
+		EmitHelper.failFast().emitNext(inner, 3);
+		EmitHelper.failFast().emitComplete(inner);
 
 		ts.assertValues(2).assertErrorMessage("Forced failure");
 	}
@@ -471,12 +471,12 @@ public class FluxMergeSequentialTest {
 			   .flatMapSequential(Flux::just)
 		       .doOnNext(t -> {
 			       if (once.compareAndSet(false, true)) {
-				       subject.emitNext(2);
+				       EmitHelper.failFast().emitNext(subject, 2);
 			       }
 		       })
 		       .subscribe(ts);
 
-		subject.emitNext(1);
+		EmitHelper.failFast().emitNext(subject, 1);
 
 		ts.assertNoError();
 		ts.assertNotComplete();

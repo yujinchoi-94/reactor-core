@@ -210,12 +210,12 @@ public class FluxPublishTest extends FluxOperatorTest<String, String> {
 		AssertSubscriber<Integer> ts2 = AssertSubscriber.create();
 
 		Sinks.Many<Integer> up = Sinks.many().unsafe().unicast().onBackpressureBuffer(Queues.<Integer>get(8).get());
-		up.emitNext(1);
-		up.emitNext(2);
-		up.emitNext(3);
-		up.emitNext(4);
-		up.emitNext(5);
-		up.emitComplete();
+		EmitHelper.failFast().emitNext(up, 1);
+		EmitHelper.failFast().emitNext(up, 2);
+		EmitHelper.failFast().emitNext(up, 3);
+		EmitHelper.failFast().emitNext(up, 4);
+		EmitHelper.failFast().emitNext(up, 5);
+		EmitHelper.failFast().emitComplete(up);
 
 		ConnectableFlux<Integer> p = up.asFlux().publish();
 
@@ -249,12 +249,12 @@ public class FluxPublishTest extends FluxOperatorTest<String, String> {
 		AssertSubscriber<Integer> ts2 = AssertSubscriber.create(0);
 
 		Sinks.Many<Integer> up = Sinks.many().unsafe().unicast().onBackpressureBuffer(Queues.<Integer>get(8).get());
-		up.emitNext(1);
-		up.emitNext(2);
-		up.emitNext(3);
-		up.emitNext(4);
-		up.emitNext(5);
-		up.emitComplete();
+		EmitHelper.failFast().emitNext(up, 1);
+		EmitHelper.failFast().emitNext(up, 2);
+		EmitHelper.failFast().emitNext(up, 3);
+		EmitHelper.failFast().emitNext(up, 4);
+		EmitHelper.failFast().emitNext(up, 5);
+		EmitHelper.failFast().emitComplete(up);
 
 		ConnectableFlux<Integer> p = up.asFlux().publish();
 
@@ -420,8 +420,8 @@ public class FluxPublishTest extends FluxOperatorTest<String, String> {
 
 		Disposable r = p.connect();
 
-		e.emitNext(1);
-		e.emitNext(2);
+		EmitHelper.failFast().emitNext(e, 1);
+		EmitHelper.failFast().emitNext(e, 2);
 
 		r.dispose();
 
@@ -465,9 +465,9 @@ public class FluxPublishTest extends FluxOperatorTest<String, String> {
 
 		p.connect();
 
-		e.emitNext(1);
-		e.emitNext(2);
-		e.emitError(new RuntimeException("forced failure"));
+		EmitHelper.failFast().emitNext(e, 1);
+		EmitHelper.failFast().emitNext(e, 2);
+		EmitHelper.failFast().emitError(e, new RuntimeException("forced failure"));
 
 		ts.assertValues(1, 2)
 		.assertError(RuntimeException.class)
@@ -506,16 +506,16 @@ public class FluxPublishTest extends FluxOperatorTest<String, String> {
 					}
 				}).retry())
 		            .then(() -> {
-			            dp.emitNext(1);
-			            dp.emitNext(2);
-			            dp.emitNext(3);
+			            EmitHelper.failFast().emitNext(dp, 1);
+			            EmitHelper.failFast().emitNext(dp, 2);
+			            EmitHelper.failFast().emitNext(dp, 3);
 		            })
 		            .expectNext(2, 3)
 		            .thenCancel()
 		            .verify();
 
 		// Need to explicitly complete processor due to use of publish()
-		dp.emitComplete();
+		EmitHelper.failFast().emitComplete(dp);
 	}
 
 	@Test
@@ -533,16 +533,16 @@ public class FluxPublishTest extends FluxOperatorTest<String, String> {
 					}
 				}).retry())
 		            .then(() -> {
-			            dp.emitNext(1);
-			            dp.emitNext(2);
-			            dp.emitNext(3);
+			            EmitHelper.failFast().emitNext(dp, 1);
+			            EmitHelper.failFast().emitNext(dp, 2);
+			            EmitHelper.failFast().emitNext(dp, 3);
 		            })
 		            .expectNext(2, 3)
 		            .thenCancel()
 		            .verify();
 
 		// Need to explicitly complete processor due to use of publish()
-		dp.emitComplete();
+		EmitHelper.failFast().emitComplete(dp);
 	}
 
 	@Test

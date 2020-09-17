@@ -179,45 +179,45 @@ public class FluxBufferWhenTest {
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp1.emitNext(1);
+		EmitHelper.failFast().emitNext(sp1, 1);
 
 		ts.assertNoValues()
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp2.emitNext(1);
+		EmitHelper.failFast().emitNext(sp2, 1);
 
 		Assert.assertTrue("sp3 has no subscribers?", Scannable.from(sp3)
 															  .inners()
 															  .count() != 0);
 
-		sp1.emitNext(2);
-		sp1.emitNext(3);
-		sp1.emitNext(4);
+		EmitHelper.failFast().emitNext(sp1, 2);
+		EmitHelper.failFast().emitNext(sp1, 3);
+		EmitHelper.failFast().emitNext(sp1, 4);
 
-		sp3.emitComplete();
+		EmitHelper.failFast().emitComplete(sp3);
 
 		ts.assertValues(Arrays.asList(2, 3, 4))
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp1.emitNext(5);
+		EmitHelper.failFast().emitNext(sp1, 5);
 
-		sp2.emitNext(2);
+		EmitHelper.failFast().emitNext(sp2, 2);
 
 		Assert.assertTrue("sp4 has no subscribers?", Scannable.from(sp4)
 															  .inners()
 															  .count() != 0);
 
-		sp1.emitNext(6);
+		EmitHelper.failFast().emitNext(sp1, 6);
 
-		sp4.emitComplete();
+		EmitHelper.failFast().emitComplete(sp4);
 
 		ts.assertValues(Arrays.asList(2, 3, 4), Collections.singletonList(6))
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp1.emitComplete();
+		EmitHelper.failFast().emitComplete(sp1);
 
 		ts.assertValues(Arrays.asList(2, 3, 4), Collections.singletonList(6))
 		  .assertNoError()
@@ -240,24 +240,24 @@ public class FluxBufferWhenTest {
 		  .assertNoError()
 		  .assertNotComplete();
 
-		source.emitNext(1);
+		EmitHelper.failFast().emitNext(source, 1);
 
 		ts.assertNoValues()
 		  .assertNoError()
 		  .assertNotComplete();
 
-		open.emitNext(1);
-		open.emitComplete();
+		EmitHelper.failFast().emitNext(open, 1);
+		EmitHelper.failFast().emitComplete(open);
 
 		Assert.assertTrue("close has no subscribers?", Scannable.from(close)
 																.inners()
 																.count() != 0);
 
-		source.emitNext(2);
-		source.emitNext(3);
-		source.emitNext(4);
+		EmitHelper.failFast().emitNext(source, 2);
+		EmitHelper.failFast().emitNext(source, 3);
+		EmitHelper.failFast().emitNext(source, 4);
 
-		close.emitComplete();
+		EmitHelper.failFast().emitComplete(close);
 
 		ts.assertValues(Arrays.asList(2, 3, 4))
 		  .assertNoError()
@@ -286,18 +286,18 @@ public class FluxBufferWhenTest {
 		StepVerifier.create(numbers.asFlux()
 								   .bufferWhen(bucketOpening.asFlux(), u -> boundaryFlux.asFlux())
 								   .collectList())
-					.then(() -> {
-						numbers.emitNext(1);
-						numbers.emitNext(2);
-						bucketOpening.emitNext(1);
-						numbers.emitNext(3);
-						bucketOpening.emitNext(1);
-						numbers.emitNext(5);
-						boundaryFlux.emitNext(1);
-						bucketOpening.emitNext(1);
-						boundaryFlux.emitComplete();
-						numbers.emitComplete();
-						//"the collected overlapping lists are available"
+		            .then(() -> {
+			            EmitHelper.failFast().emitNext(numbers, 1);
+			            EmitHelper.failFast().emitNext(numbers, 2);
+			            EmitHelper.failFast().emitNext(bucketOpening, 1);
+			            EmitHelper.failFast().emitNext(numbers, 3);
+			            EmitHelper.failFast().emitNext(bucketOpening, 1);
+			            EmitHelper.failFast().emitNext(numbers, 5);
+			            EmitHelper.failFast().emitNext(boundaryFlux, 1);
+			            EmitHelper.failFast().emitNext(bucketOpening, 1);
+			            EmitHelper.failFast().emitComplete(boundaryFlux);
+			            EmitHelper.failFast().emitComplete(numbers);
+			            //"the collected overlapping lists are available"
 					})
 					.assertNext(res -> assertThat(res).containsExactly(Arrays.asList(3, 5), Collections.singletonList(5), Collections.emptyList()))
 					.verifyComplete();

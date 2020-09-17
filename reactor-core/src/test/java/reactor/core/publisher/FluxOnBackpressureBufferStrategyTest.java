@@ -111,11 +111,11 @@ public class FluxOnBackpressureBufferStrategyTest implements Consumer<String>,
 		StepVerifier.create(flux, 0)
 		            .thenRequest(1)
 		            .then(() -> {
-			            processor.emitNext("normal");
-			            processor.emitNext("over1");
-			            processor.emitNext("over2");
-			            processor.emitNext("over3");
-			            processor.emitComplete();
+			            EmitHelper.failFast().emitNext(processor, "normal");
+			            EmitHelper.failFast().emitNext(processor, "over1");
+			            EmitHelper.failFast().emitNext(processor, "over2");
+			            EmitHelper.failFast().emitNext(processor, "over3");
+			            EmitHelper.failFast().emitComplete(processor);
 		            })
 		            .expectNext("normal")
 		            .thenAwait()
@@ -139,11 +139,11 @@ public class FluxOnBackpressureBufferStrategyTest implements Consumer<String>,
 		StepVerifier.create(flux, 0)
 		            .thenRequest(1)
 		            .then(() -> {
-			            processor.emitNext("normal");
-			            processor.emitNext("over1");
-			            processor.emitNext("over2");
-			            processor.emitNext("over3");
-			            processor.emitComplete();
+			            EmitHelper.failFast().emitNext(processor, "normal");
+			            EmitHelper.failFast().emitNext(processor, "over1");
+			            EmitHelper.failFast().emitNext(processor, "over2");
+			            EmitHelper.failFast().emitNext(processor, "over3");
+			            EmitHelper.failFast().emitComplete(processor);
 		            })
 		            .expectNext("normal")
 		            .thenAwait()
@@ -167,11 +167,11 @@ public class FluxOnBackpressureBufferStrategyTest implements Consumer<String>,
 		StepVerifier.create(flux, 0)
 		            .thenRequest(1)
 		            .then(() -> {
-			            processor.emitNext("normal");
-			            processor.emitNext("over1");
-			            processor.emitNext("over2");
-			            processor.emitNext("over3");
-			            processor.emitComplete();
+			            EmitHelper.failFast().emitNext(processor, "normal");
+			            EmitHelper.failFast().emitNext(processor, "over1");
+			            EmitHelper.failFast().emitNext(processor, "over2");
+			            EmitHelper.failFast().emitNext(processor, "over3");
+			            EmitHelper.failFast().emitComplete(processor);
 		            })
 		            .expectNext("normal")
 		            .thenAwait()
@@ -273,11 +273,11 @@ public class FluxOnBackpressureBufferStrategyTest implements Consumer<String>,
 		StepVerifier.create(flux, 0)
 		            .thenRequest(1)
 		            .then(() -> {
-			            processor.emitNext("normal");
-			            processor.emitNext("over1");
-			            processor.emitNext("over2");
-			            processor.emitNext("over3");
-			            processor.emitComplete();
+			            EmitHelper.failFast().emitNext(processor, "normal");
+			            EmitHelper.failFast().emitNext(processor, "over1");
+			            EmitHelper.failFast().emitNext(processor, "over2");
+			            EmitHelper.failFast().emitNext(processor, "over3");
+			            EmitHelper.failFast().emitComplete(processor);
 		            })
 		            .expectNext("normal")
 		            .thenAwait()
@@ -303,11 +303,11 @@ public class FluxOnBackpressureBufferStrategyTest implements Consumer<String>,
 		StepVerifier.create(flux, 0)
 		            .thenRequest(1)
 		            .then(() -> {
-			            processor.emitNext("normal");
-			            processor.emitNext("over1");
-			            processor.emitNext("over2");
-			            processor.emitNext("over3");
-			            processor.emitComplete();
+			            EmitHelper.failFast().emitNext(processor, "normal");
+			            EmitHelper.failFast().emitNext(processor, "over1");
+			            EmitHelper.failFast().emitNext(processor, "over2");
+			            EmitHelper.failFast().emitNext(processor, "over3");
+			            EmitHelper.failFast().emitComplete(processor);
 		            })
 		            .expectNext("normal")
 		            .thenAwait()
@@ -333,11 +333,11 @@ public class FluxOnBackpressureBufferStrategyTest implements Consumer<String>,
 		StepVerifier.create(flux, 0)
 		            .thenRequest(1)
 		            .then(() -> {
-			            processor.emitNext("normal");
-			            processor.emitNext("over1");
-			            processor.emitNext("over2");
-			            processor.emitNext("over3");
-			            processor.emitComplete();
+			            EmitHelper.failFast().emitNext(processor, "normal");
+			            EmitHelper.failFast().emitNext(processor, "over1");
+			            EmitHelper.failFast().emitNext(processor, "over2");
+			            EmitHelper.failFast().emitNext(processor, "over3");
+			            EmitHelper.failFast().emitComplete(processor);
 		            })
 		            .expectNext("normal")
 		            .thenAwait()
@@ -362,12 +362,12 @@ public class FluxOnBackpressureBufferStrategyTest implements Consumer<String>,
 		StepVerifier.create(flux, 0)
 		            .thenRequest(1)
 		            .then(() -> {
-			            processor.emitNext("normal");
-			            processor.emitNext("over1");
-			            processor.emitNext("over2");
-			            processor.emitNext("over3");
-			            processor.emitNext("over4");
-			            processor.emitComplete();
+			            EmitHelper.failFast().emitNext(processor, "normal");
+			            EmitHelper.failFast().emitNext(processor, "over1");
+			            EmitHelper.failFast().emitNext(processor, "over2");
+			            EmitHelper.failFast().emitNext(processor, "over3");
+			            EmitHelper.failFast().emitNext(processor, "over4");
+			            EmitHelper.failFast().emitComplete(processor);
 		            })
 		            .expectNext("normal")
 		            .thenAwait()
@@ -392,11 +392,11 @@ public class FluxOnBackpressureBufferStrategyTest implements Consumer<String>,
 		StepVerifier.create(flux, 0)
 		            .thenRequest(1)
 		            .then(() -> {
-			            processor.emitNext("normal");
-			            processor.emitNext("over1");
-			            processor.emitNext("over2");
-			            processor.emitNext("over3");
-			            processor.emitComplete();
+			            EmitHelper.failFast().emitNext(processor, "normal");
+			            EmitHelper.failFast().emitNext(processor, "over1");
+			            EmitHelper.failFast().emitNext(processor, "over2");
+			            EmitHelper.failFast().emitNext(processor, "over3");
+			            EmitHelper.failFast().emitComplete(processor);
 		            })
 		            .expectNext("normal")
 		            .thenAwait()
@@ -420,11 +420,11 @@ public class FluxOnBackpressureBufferStrategyTest implements Consumer<String>,
 		StepVerifier.create(flux, 0)
 		            .thenRequest(1)
 		            .then(() -> {
-			            processor.emitNext("normal");
-			            processor.emitNext("over1");
-			            processor.emitNext("over2");
-			            processor.emitNext("over3");
-			            processor.emitComplete();
+			            EmitHelper.failFast().emitNext(processor, "normal");
+			            EmitHelper.failFast().emitNext(processor, "over1");
+			            EmitHelper.failFast().emitNext(processor, "over2");
+			            EmitHelper.failFast().emitNext(processor, "over3");
+			            EmitHelper.failFast().emitComplete(processor);
 		            })
 		            .expectNext("normal")
 		            .thenAwait()
@@ -445,11 +445,11 @@ public class FluxOnBackpressureBufferStrategyTest implements Consumer<String>,
 		StepVerifier.create(processor.asFlux().onBackpressureBuffer(2, DROP_OLDEST), 0)
 		            .thenRequest(1)
 		            .then(() -> {
-			            processor.emitNext("normal");
-			            processor.emitNext("over1");
-			            processor.emitNext("over2");
-			            processor.emitNext("over3");
-			            processor.emitComplete();
+			            EmitHelper.failFast().emitNext(processor, "normal");
+			            EmitHelper.failFast().emitNext(processor, "over1");
+			            EmitHelper.failFast().emitNext(processor, "over2");
+			            EmitHelper.failFast().emitNext(processor, "over3");
+			            EmitHelper.failFast().emitComplete(processor);
 		            })
 		            .expectNext("normal")
 		            .thenAwait()

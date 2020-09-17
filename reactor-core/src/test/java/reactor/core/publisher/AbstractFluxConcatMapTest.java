@@ -288,20 +288,20 @@ public abstract class AbstractFluxConcatMapTest extends FluxOperatorTest<String,
 		  .assertNoError()
 		  .assertNotComplete();
 
-		source.emitNext(1);
+		EmitHelper.failFast().emitNext(source, 1);
 
 		Assert.assertTrue("source1 no subscribers?", Scannable.from(source1).inners().count() != 0);
 		Assert.assertFalse("source2 has subscribers?", Scannable.from(source2).inners().count() != 0);
 
-		source1.emitNext(1);
-		source2.emitNext(10);
+		EmitHelper.failFast().emitNext(source1, 1);
+		EmitHelper.failFast().emitNext(source2, 10);
 
-		source1.emitComplete();
-		source.emitNext(2);
-		source.emitComplete();
+		EmitHelper.failFast().emitComplete(source1);
+		EmitHelper.failFast().emitNext(source, 2);
+		EmitHelper.failFast().emitComplete(source);
 
-		source2.emitNext(2);
-		source2.emitComplete();
+		EmitHelper.failFast().emitNext(source2, 2);
+		EmitHelper.failFast().emitComplete(source2);
 
 		ts.assertValues(1, 2)
 		  .assertNoError()
@@ -327,14 +327,14 @@ public abstract class AbstractFluxConcatMapTest extends FluxOperatorTest<String,
 		  .assertNoError()
 		  .assertNotComplete();
 
-		source.emitNext(1);
+		EmitHelper.failFast().emitNext(source, 1);
 
 		Assert.assertTrue("source1 no subscribers?", Scannable.from(source1).inners().count() != 0);
 		Assert.assertFalse("source2 has subscribers?", Scannable.from(source2).inners().count() != 0);
 
-		source1.emitNext(1);
+		EmitHelper.failFast().emitNext(source1, 1);
 
-		source.emitError(new RuntimeException("forced failure"));
+		EmitHelper.failFast().emitError(source, new RuntimeException("forced failure"));
 
 		ts.assertValues(1)
 		  .assertError(RuntimeException.class)
@@ -361,21 +361,21 @@ public abstract class AbstractFluxConcatMapTest extends FluxOperatorTest<String,
 		  .assertNoError()
 		  .assertNotComplete();
 
-		source.emitNext(1);
+		EmitHelper.failFast().emitNext(source, 1);
 
 		Assert.assertTrue("source1 no subscribers?", Scannable.from(source1).inners().count() != 0);
 		Assert.assertFalse("source2 has subscribers?", Scannable.from(source2).inners().count() != 0);
 
-		source1.emitNext(1);
+		EmitHelper.failFast().emitNext(source1, 1);
 
-		source.emitError(new RuntimeException("forced failure"));
+		EmitHelper.failFast().emitError(source, new RuntimeException("forced failure"));
 
 		ts.assertValues(1)
 		  .assertNoError()
 		  .assertNotComplete();
 
-		source1.emitNext(2);
-		source1.emitComplete();
+		EmitHelper.failFast().emitNext(source1, 2);
+		EmitHelper.failFast().emitComplete(source1);
 
 		ts.assertValues(1, 2)
 		  .assertError(RuntimeException.class)
@@ -402,14 +402,14 @@ public abstract class AbstractFluxConcatMapTest extends FluxOperatorTest<String,
 		  .assertNoError()
 		  .assertNotComplete();
 
-		source.emitNext(1);
+		EmitHelper.failFast().emitNext(source, 1);
 
 		Assert.assertTrue("source1 no subscribers?", Scannable.from(source1).inners().count() != 0);
 		Assert.assertFalse("source2 has subscribers?", Scannable.from(source2).inners().count() != 0);
 
-		source1.emitNext(1);
+		EmitHelper.failFast().emitNext(source1, 1);
 
-		source1.emitError(new RuntimeException("forced failure"));
+		EmitHelper.failFast().emitError(source1, new RuntimeException("forced failure"));
 
 		ts.assertValues(1)
 		  .assertError(RuntimeException.class)
@@ -454,9 +454,9 @@ public abstract class AbstractFluxConcatMapTest extends FluxOperatorTest<String,
 		AssertSubscriber<Integer> ts = AssertSubscriber.create();
 
 		Sinks.Many<Integer> up = Sinks.many().unicast().onBackpressureBuffer(Queues.<Integer>get(2).get());
-		up.emitNext(1);
-		up.emitNext(2);
-		up.emitComplete();
+		EmitHelper.failFast().emitNext(up, 1);
+		EmitHelper.failFast().emitNext(up, 2);
+		EmitHelper.failFast().emitComplete(up);
 
 		up.asFlux()
 		  .map(v -> v == 2 ? null : v)
@@ -474,9 +474,9 @@ public abstract class AbstractFluxConcatMapTest extends FluxOperatorTest<String,
 
 		Sinks.Many<Integer> up =
 				Sinks.many().unicast().onBackpressureBuffer(Queues.<Integer>get(2).get());
-		up.emitNext(1);
-		up.emitNext(2);
-		up.emitComplete();
+		EmitHelper.failFast().emitNext(up, 1);
+		EmitHelper.failFast().emitNext(up, 2);
+		EmitHelper.failFast().emitComplete(up);
 
 		up.asFlux()
 		  .map(v -> v == 2 ? null : v)
@@ -859,14 +859,14 @@ public abstract class AbstractFluxConcatMapTest extends FluxOperatorTest<String,
 		  .assertNoError()
 		  .assertNotComplete();
 
-		source.emitNext(1);
+		EmitHelper.failFast().emitNext(source, 1);
 
 		Assert.assertTrue("source1 no subscribers?", Scannable.from(source1).inners().count() != 0);
 		Assert.assertFalse("source2 has subscribers?", Scannable.from(source2).inners().count() != 0);
 
-		source1.emitNext(1);
+		EmitHelper.failFast().emitNext(source1, 1);
 
-		source1.emitError(new RuntimeException("forced failure"));
+		EmitHelper.failFast().emitError(source1, new RuntimeException("forced failure"));
 
 		ts.assertValues(1)
 		  .assertError(RuntimeException.class)
@@ -893,23 +893,23 @@ public abstract class AbstractFluxConcatMapTest extends FluxOperatorTest<String,
 		  .assertNoError()
 		  .assertNotComplete();
 
-		source.emitNext(1);
+		EmitHelper.failFast().emitNext(source, 1);
 
 		Assert.assertTrue("source1 no subscribers?", Scannable.from(source1).inners().count() != 0);
 		Assert.assertFalse("source2 has subscribers?", Scannable.from(source2).inners().count() != 0);
 
-		source1.emitNext(1);
+		EmitHelper.failFast().emitNext(source1, 1);
 
-		source1.emitError(new RuntimeException("forced failure"));
+		EmitHelper.failFast().emitError(source1, new RuntimeException("forced failure"));
 
-		source.emitNext(2);
+		EmitHelper.failFast().emitNext(source, 2);
 
 		Assert.assertTrue("source2 no subscribers?", Scannable.from(source2).inners().count() != 0);
 
-		source2.emitNext(2);
-		source2.emitComplete();
+		EmitHelper.failFast().emitNext(source2, 2);
+		EmitHelper.failFast().emitComplete(source2);
 
-		source.emitComplete();
+		EmitHelper.failFast().emitComplete(source);
 
 		ts.assertValues(1, 2)
 		  .assertError(RuntimeException.class)

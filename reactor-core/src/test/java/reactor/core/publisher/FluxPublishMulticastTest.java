@@ -161,12 +161,12 @@ public class FluxPublishMulticastTest extends FluxOperatorTest<String, String> {
 		  .publish(o -> zip((Object[] a) -> (Integer) a[0] + (Integer) a[1], o, o.skip(1)))
 		  .subscribe(ts);
 
-		up.emitNext(1);
-		up.emitNext(2);
-		up.emitNext(3);
-		up.emitNext(4);
-		up.emitNext(5);
-		up.emitComplete();
+		EmitHelper.failFast().emitNext(up, 1);
+		EmitHelper.failFast().emitNext(up, 2);
+		EmitHelper.failFast().emitNext(up, 3);
+		EmitHelper.failFast().emitNext(up, 4);
+		EmitHelper.failFast().emitNext(up, 5);
+		EmitHelper.failFast().emitComplete(up);
 
 		ts.assertValues(1 + 2, 2 + 3, 3 + 4, 4 + 5)
 		  .assertNoError()

@@ -31,6 +31,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.reactivestreams.Publisher;
 
+import reactor.core.publisher.EmitHelper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -215,7 +216,7 @@ public class MonoTests {
 	@Test
 	public void testMono() throws Exception {
 		Sinks.One<String> promise = Sinks.one();
-		promise.emitValue("test");
+		EmitHelper.failFast().emitValue(promise, "test");
 		final CountDownLatch successCountDownLatch = new CountDownLatch(1);
 		promise.asMono().subscribe(v -> successCountDownLatch.countDown());
 		assertThat("Failed", successCountDownLatch.await(10, TimeUnit.SECONDS));

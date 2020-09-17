@@ -55,31 +55,31 @@ public class FluxSampleTest {
 		  .assertNotComplete()
 		  .assertNoError();
 
-		main.emitNext(1);
+		EmitHelper.failFast().emitNext(main, 1);
 
 		ts.assertNoValues()
 		  .assertNotComplete()
 		  .assertNoError();
 
-		other.emitNext("first");
+		EmitHelper.failFast().emitNext(other, "first");
 
 		ts.assertValues(1)
 		  .assertNoError()
 		  .assertNotComplete();
 
-		other.emitNext("second");
+		EmitHelper.failFast().emitNext(other, "second");
 
 		ts.assertValues(1)
 		  .assertNoError()
 		  .assertNotComplete();
 
-		main.emitNext(2);
+		EmitHelper.failFast().emitNext(main, 2);
 
 		ts.assertValues(1)
 		  .assertNoError()
 		  .assertNotComplete();
 
-		other.emitNext("third");
+		EmitHelper.failFast().emitNext(other, "third");
 
 		ts.assertValues(1, 2)
 		  .assertNoError()
@@ -88,14 +88,14 @@ public class FluxSampleTest {
 		Sinks.Many<?> p = which ? main : other;
 
 		if (complete) {
-			p.emitComplete();
+			EmitHelper.failFast().emitComplete(p);
 
 			ts.assertValues(1, 2)
 			  .assertComplete()
 			  .assertNoError();
 		}
 		else {
-			p.emitError(new RuntimeException("forced failure"));
+			EmitHelper.failFast().emitError(p, new RuntimeException("forced failure"));
 
 			ts.assertValues(1, 2)
 			  .assertNotComplete()
@@ -156,10 +156,10 @@ public class FluxSampleTest {
 		Sinks.Many<String> other = DirectProcessor.create();
 
 		if (which) {
-			main.emitComplete();
+			EmitHelper.failFast().emitComplete(main);
 		}
 		else {
-			other.emitComplete();
+			EmitHelper.failFast().emitComplete(other);
 		}
 
 		AssertSubscriber<Integer> ts = AssertSubscriber.create();

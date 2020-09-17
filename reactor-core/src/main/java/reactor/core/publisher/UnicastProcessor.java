@@ -228,13 +228,6 @@ public final class UnicastProcessor<T> extends FluxProcessor<T, T>
 	}
 
 	@Override
-	public void emitComplete() {
-		//no particular error condition handling for onComplete
-		@SuppressWarnings("unused")
-		Emission emission = tryEmitComplete();
-	}
-
-	@Override
 	public Emission tryEmitComplete() {
 		if (done) {
 			return Emission.FAIL_TERMINATED;
@@ -253,15 +246,7 @@ public final class UnicastProcessor<T> extends FluxProcessor<T, T>
 
 	@Override
 	public void onError(Throwable throwable) {
-		emitError(throwable);
-	}
-
-	@Override
-	public void emitError(Throwable error) {
-		Emission result = tryEmitError(error);
-		if (result == Emission.FAIL_TERMINATED) {
-			Operators.onErrorDropped(error, currentContext());
-		}
+		EmitHelper.failFast().emitError(this, throwable);
 	}
 
 	@Override
@@ -283,12 +268,7 @@ public final class UnicastProcessor<T> extends FluxProcessor<T, T>
 	}
 
 	@Override
-	public void onNext(T t) {
-		emitNext(t);
-	}
-
-	@Override
-	public void emitNext(T value) {
+	public void onNext(T value) {
 		switch (tryEmitNext(value)) {
 			case FAIL_ZERO_SUBSCRIBER:
 				if (onOverflow != null) {
@@ -297,7 +277,7 @@ public final class UnicastProcessor<T> extends FluxProcessor<T, T>
 					}
 					catch (Throwable e) {
 						Exceptions.throwIfFatal(e);
-						emitError(e);
+						EmitHelper.failFast().emitError(this, e);
 					}
 				}
 				//otherwise not really any possibility of discarding here. the sink is kept open, though
@@ -326,6 +306,8 @@ public final class UnicastProcessor<T> extends FluxProcessor<T, T>
 				break;
 			case OK:
 				break;
+			case FAIL_NON_SERIALIZED:
+				throw new IllegalStateException();
 		}
 	}
 

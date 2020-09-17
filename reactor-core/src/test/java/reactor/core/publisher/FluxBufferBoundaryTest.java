@@ -88,37 +88,37 @@ public class FluxBufferBoundaryTest
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp1.emitNext(1);
-		sp1.emitNext(2);
+		EmitHelper.failFast().emitNext(sp1, 1);
+		EmitHelper.failFast().emitNext(sp1, 2);
 
 		ts.assertNoValues()
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp2.emitNext(1);
+		EmitHelper.failFast().emitNext(sp2, 1);
 
 		ts.assertValues(Arrays.asList(1, 2))
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp2.emitNext(2);
+		EmitHelper.failFast().emitNext(sp2, 2);
 
 		ts.assertValues(Arrays.asList(1, 2))
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp1.emitNext(3);
-		sp1.emitNext(4);
+		EmitHelper.failFast().emitNext(sp1, 3);
+		EmitHelper.failFast().emitNext(sp1, 4);
 
-		sp2.emitComplete();
+		EmitHelper.failFast().emitComplete(sp2);
 
 		ts.assertValues(Arrays.asList(1, 2), Arrays.asList(3, 4))
 		  .assertNoError()
 		  .assertComplete();
 
-		sp1.emitNext(5);
-		sp1.emitNext(6);
-		sp1.emitComplete();
+		EmitHelper.failFast().emitNext(sp1, 5);
+		EmitHelper.failFast().emitNext(sp1, 6);
+		EmitHelper.failFast().emitComplete(sp1);
 
 		ts.assertValues(Arrays.asList(1, 2), Arrays.asList(3, 4))
 		  .assertNoError()
@@ -140,31 +140,31 @@ public class FluxBufferBoundaryTest
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp1.emitNext(1);
-		sp1.emitNext(2);
+		EmitHelper.failFast().emitNext(sp1, 1);
+		EmitHelper.failFast().emitNext(sp1, 2);
 
 		ts.assertNoValues()
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp2.emitNext(1);
+		EmitHelper.failFast().emitNext(sp2, 1);
 
 		ts.assertValues(Arrays.asList(1, 2))
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp1.emitError(new RuntimeException("forced failure"));
+		EmitHelper.failFast().emitError(sp1, new RuntimeException("forced failure"));
 
 		Assert.assertFalse("sp2 has subscribers?", Scannable.from(sp2).inners().findAny().isPresent());
 
-		sp2.emitNext(2);
+		EmitHelper.failFast().emitNext(sp2, 2);
 
 		ts.assertValues(Arrays.asList(1, 2))
 		  .assertError(RuntimeException.class)
 		  .assertErrorMessage("forced failure")
 		  .assertNotComplete();
 
-		sp2.emitComplete();
+		EmitHelper.failFast().emitComplete(sp2);
 
 		ts.assertValues(Arrays.asList(1, 2))
 		  .assertError(RuntimeException.class)
@@ -187,22 +187,22 @@ public class FluxBufferBoundaryTest
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp1.emitNext(1);
-		sp1.emitNext(2);
+		EmitHelper.failFast().emitNext(sp1, 1);
+		EmitHelper.failFast().emitNext(sp1, 2);
 
 		ts.assertNoValues()
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp2.emitNext(1);
+		EmitHelper.failFast().emitNext(sp2, 1);
 
 		ts.assertValues(Arrays.asList(1, 2))
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp1.emitNext(3);
+		EmitHelper.failFast().emitNext(sp1, 3);
 
-		sp2.emitError(new RuntimeException("forced failure"));
+		EmitHelper.failFast().emitError(sp2, new RuntimeException("forced failure"));
 
 		Assert.assertFalse("sp1 has subscribers?", Scannable.from(sp1).inners().findAny().isPresent());
 
@@ -211,7 +211,7 @@ public class FluxBufferBoundaryTest
 		  .assertErrorMessage("forced failure")
 		  .assertNotComplete();
 
-		sp2.emitComplete();
+		EmitHelper.failFast().emitComplete(sp2);
 
 		ts.assertValues(Arrays.asList(1, 2))
 		  .assertError(RuntimeException.class)
@@ -259,10 +259,10 @@ public class FluxBufferBoundaryTest
 		})
 		   .subscribe(ts);
 
-		sp1.emitNext(1);
-		sp1.emitNext(2);
+		EmitHelper.failFast().emitNext(sp1, 1);
+		EmitHelper.failFast().emitNext(sp1, 2);
 
-		sp2.emitNext(1);
+		EmitHelper.failFast().emitNext(sp2, 1);
 
 		Assert.assertFalse("sp1 has subscribers?", Scannable.from(sp1).inners().findAny().isPresent());
 		Assert.assertFalse("sp2 has subscribers?", Scannable.from(sp2).inners().findAny().isPresent());
@@ -337,14 +337,14 @@ public class FluxBufferBoundaryTest
 		StepVerifier.create(numbers.asFlux()
 								   .buffer(boundaryFlux.asFlux())
 								   .collectList())
-					.then(() -> {
-						numbers.emitNext(1);
-						numbers.emitNext(2);
-						numbers.emitNext(3);
-						boundaryFlux.emitNext(1);
-						numbers.emitNext(5);
-						numbers.emitNext(6);
-						numbers.emitComplete();
+		            .then(() -> {
+			            EmitHelper.failFast().emitNext(numbers, 1);
+			            EmitHelper.failFast().emitNext(numbers, 2);
+			            EmitHelper.failFast().emitNext(numbers, 3);
+			            EmitHelper.failFast().emitNext(boundaryFlux, 1);
+			            EmitHelper.failFast().emitNext(numbers, 5);
+			            EmitHelper.failFast().emitNext(numbers, 6);
+			            EmitHelper.failFast().emitComplete(numbers);
 						//"the collected lists are available"
 					})
 					.assertNext(res -> assertThat(res).containsExactly(Arrays.asList(1, 2, 3), Arrays.asList(5, 6)))

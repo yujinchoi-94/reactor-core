@@ -42,19 +42,19 @@ public class FluxSwitchMapTest {
 		   .switchMap(v -> sp2.asFlux())
 		   .subscribe(ts);
 
-		sp1.emitNext(1);
+		EmitHelper.failFast().emitNext(sp1, 1);
 
-		sp2.emitNext(10);
-		sp2.emitNext(20);
-		sp2.emitNext(30);
-		sp2.emitNext(40);
-		sp2.emitComplete();
+		EmitHelper.failFast().emitNext(sp2, 10);
+		EmitHelper.failFast().emitNext(sp2, 20);
+		EmitHelper.failFast().emitNext(sp2, 30);
+		EmitHelper.failFast().emitNext(sp2, 40);
+		EmitHelper.failFast().emitComplete(sp2);
 
 		ts.assertValues(10, 20, 30, 40)
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp1.emitComplete();
+		EmitHelper.failFast().emitComplete(sp1);
 
 		ts.assertValues(10, 20, 30, 40)
 		  .assertNoError()
@@ -73,13 +73,13 @@ public class FluxSwitchMapTest {
 		   .switchMap(v -> sp2.asFlux())
 		   .subscribe(ts);
 
-		sp1.emitNext(1);
+		EmitHelper.failFast().emitNext(sp1, 1);
 
-		sp2.emitNext(10);
-		sp2.emitNext(20);
-		sp2.emitNext(30);
-		sp2.emitNext(40);
-		sp2.emitComplete();
+		EmitHelper.failFast().emitNext(sp2, 10);
+		EmitHelper.failFast().emitNext(sp2, 20);
+		EmitHelper.failFast().emitNext(sp2, 30);
+		EmitHelper.failFast().emitNext(sp2, 40);
+		EmitHelper.failFast().emitComplete(sp2);
 
 		ts.assertNoValues()
 		  .assertNoError()
@@ -91,7 +91,7 @@ public class FluxSwitchMapTest {
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp1.emitComplete();
+		EmitHelper.failFast().emitComplete(sp1);
 
 		ts.assertValues(10, 20)
 		  .assertNoError()
@@ -117,27 +117,27 @@ public class FluxSwitchMapTest {
 		   .switchMap(v -> v == 1 ? sp2.asFlux() : sp3.asFlux())
 		   .subscribe(ts);
 
-		sp1.emitNext(1);
+		EmitHelper.failFast().emitNext(sp1, 1);
 
-		sp2.emitNext(10);
-		sp2.emitNext(20);
+		EmitHelper.failFast().emitNext(sp2, 10);
+		EmitHelper.failFast().emitNext(sp2, 20);
 
-		sp1.emitNext(2);
+		EmitHelper.failFast().emitNext(sp1, 2);
 
 		Assert.assertFalse("sp2 has subscribers?", Scannable.from(sp2).inners().findAny().isPresent());
 
-		sp2.emitNext(30);
-		sp3.emitNext(300);
-		sp2.emitNext(40);
-		sp3.emitNext(400);
-		sp2.emitComplete();
-		sp3.emitComplete();
+		EmitHelper.failFast().emitNext(sp2, 30);
+		EmitHelper.failFast().emitNext(sp3, 300);
+		EmitHelper.failFast().emitNext(sp2, 40);
+		EmitHelper.failFast().emitNext(sp3, 400);
+		EmitHelper.failFast().emitComplete(sp2);
+		EmitHelper.failFast().emitComplete(sp3);
 
 		ts.assertValues(10, 20, 300, 400)
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp1.emitComplete();
+		EmitHelper.failFast().emitComplete(sp1);
 
 		ts.assertValues(10, 20, 300, 400)
 		  .assertNoError()
@@ -166,18 +166,18 @@ public class FluxSwitchMapTest {
 		sp1.asFlux().switchMap(v -> sp2.asFlux())
 		   .subscribe(ts);
 
-		sp1.emitNext(1);
-		sp1.emitComplete();
+		EmitHelper.failFast().emitNext(sp1, 1);
+		EmitHelper.failFast().emitComplete(sp1);
 
 		ts.assertNoValues()
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp2.emitNext(10);
-		sp2.emitNext(20);
-		sp2.emitNext(30);
-		sp2.emitNext(40);
-		sp2.emitComplete();
+		EmitHelper.failFast().emitNext(sp2, 10);
+		EmitHelper.failFast().emitNext(sp2, 20);
+		EmitHelper.failFast().emitNext(sp2, 30);
+		EmitHelper.failFast().emitNext(sp2, 40);
+		EmitHelper.failFast().emitComplete(sp2);
 
 		ts.assertValues(10, 20, 30, 40)
 		  .assertNoError()
@@ -195,14 +195,14 @@ public class FluxSwitchMapTest {
 		sp1.asFlux().switchMap(v -> sp2.asFlux())
 		   .subscribe(ts);
 
-		sp1.emitNext(1);
-		sp1.emitError(new RuntimeException("forced failure"));
+		EmitHelper.failFast().emitNext(sp1, 1);
+		EmitHelper.failFast().emitError(sp1, new RuntimeException("forced failure"));
 
-		sp2.emitNext(10);
-		sp2.emitNext(20);
-		sp2.emitNext(30);
-		sp2.emitNext(40);
-		sp2.emitComplete();
+		EmitHelper.failFast().emitNext(sp2, 10);
+		EmitHelper.failFast().emitNext(sp2, 20);
+		EmitHelper.failFast().emitNext(sp2, 30);
+		EmitHelper.failFast().emitNext(sp2, 40);
+		EmitHelper.failFast().emitComplete(sp2);
 
 		ts.assertNoValues()
 		  .assertError(RuntimeException.class)
@@ -220,13 +220,13 @@ public class FluxSwitchMapTest {
 		sp1.asFlux().switchMap(v -> sp2.asFlux())
 		   .subscribe(ts);
 
-		sp1.emitNext(1);
+		EmitHelper.failFast().emitNext(sp1, 1);
 
-		sp2.emitNext(10);
-		sp2.emitNext(20);
-		sp2.emitNext(30);
-		sp2.emitNext(40);
-		sp2.emitError(new RuntimeException("forced failure"));
+		EmitHelper.failFast().emitNext(sp2, 10);
+		EmitHelper.failFast().emitNext(sp2, 20);
+		EmitHelper.failFast().emitNext(sp2, 30);
+		EmitHelper.failFast().emitNext(sp2, 40);
+		EmitHelper.failFast().emitError(sp2, new RuntimeException("forced failure"));
 
 		ts.assertValues(10, 20, 30, 40)
 		  .assertError(RuntimeException.class)
@@ -249,7 +249,7 @@ public class FluxSwitchMapTest {
 		})
 		   .subscribe(ts);
 
-		sp1.emitNext(1);
+		EmitHelper.failFast().emitNext(sp1, 1);
 
 		ts.assertNoValues()
 		  .assertError(RuntimeException.class)
@@ -267,7 +267,7 @@ public class FluxSwitchMapTest {
 		   .switchMap(v -> null)
 		   .subscribe(ts);
 
-		sp1.emitNext(1);
+		EmitHelper.failFast().emitNext(sp1, 1);
 
 		ts.assertNoValues()
 		  .assertError(NullPointerException.class)
@@ -285,10 +285,10 @@ public class FluxSwitchMapTest {
 	@Test
 	public void switchOnNextDynamicallyOnNext() {
 		Sinks.Many<Flux<Integer>> up = Sinks.many().unicast().onBackpressureBuffer();
-		up.emitNext(Flux.range(1, 3));
-		up.emitNext(Flux.range(2, 3).concatWith(Mono.never()));
-		up.emitNext(Flux.range(4, 3));
-		up.emitComplete();
+		EmitHelper.failFast().emitNext(up, Flux.range(1, 3));
+		EmitHelper.failFast().emitNext(up, Flux.range(2, 3).concatWith(Mono.never()));
+		EmitHelper.failFast().emitNext(up, Flux.range(4, 3));
+		EmitHelper.failFast().emitComplete(up);
 		StepVerifier.create(Flux.switchOnNext(up.asFlux()))
 		            .expectNext(1, 2, 3, 2, 3, 4, 4, 5, 6)
 		            .verifyComplete();

@@ -47,6 +47,7 @@ import reactor.core.Disposables;
 import reactor.core.Exceptions;
 import reactor.core.Scannable;
 import reactor.core.publisher.DirectProcessor;
+import reactor.core.publisher.EmitHelper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
@@ -675,7 +676,7 @@ public class SchedulersTest {
 
 			scheduler.dispose();
 
-			p.emitNext("reject me");
+			EmitHelper.failFast().emitNext(p, "reject me");
 			l.await(3, TimeUnit.SECONDS);
 		}
 		catch (Exception ree) {

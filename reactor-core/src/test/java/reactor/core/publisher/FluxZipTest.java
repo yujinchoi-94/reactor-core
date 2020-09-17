@@ -483,17 +483,17 @@ public class FluxZipTest extends FluxOperatorTest<String, String> {
 		zippedFlux.subscribe(it -> tap.set(it));
 
 //		when: "the sources accept a value"
-		source1.emitNext(1);
-		source2.emitNext(2);
-		source2.emitNext(3);
-		source2.emitNext(4);
+		EmitHelper.failFast().emitNext(source1, 1);
+		EmitHelper.failFast().emitNext(source2, 2);
+		EmitHelper.failFast().emitNext(source2, 3);
+		EmitHelper.failFast().emitNext(source2, 4);
 
 //		then: "the values are all collected from source1 flux"
 		assertThat(tap.get()).isEqualTo(3);
 
 //		when: "the sources accept the missing value"
-		source2.emitNext(5);
-		source1.emitNext(6);
+		EmitHelper.failFast().emitNext(source2, 5);
+		EmitHelper.failFast().emitNext(source1, 6);
 
 //		then: "the values are all collected from source1 flux"
 		assertThat(tap.get()).isEqualTo(9);
@@ -887,10 +887,10 @@ public class FluxZipTest extends FluxOperatorTest<String, String> {
 				1,
 				up.asFlux(),
 				Flux.just(2, 3, 5)), 0)
-		            .then(() -> up.emitNext(1))
+		            .then(() -> EmitHelper.failFast().emitNext(up, 1))
 		            .thenRequest(1)
 		            .expectNext(3)
-		            .then(() -> up.emitNext(2))
+		            .then(() -> EmitHelper.failFast().emitNext(up, 2))
 		            .thenRequest(1)
 		            .expectNext(5)
 		            .thenCancel()
@@ -904,10 +904,10 @@ public class FluxZipTest extends FluxOperatorTest<String, String> {
 				1,
 				up.asFlux(),
 				Flux.just(2, 3, 5)), 0)
-		            .then(() -> up.emitNext(1))
+		            .then(() -> EmitHelper.failFast().emitNext(up, 1))
 		            .thenRequest(3)
 		            .expectNext(3)
-		            .then(() -> up.emitNext(2))
+		            .then(() -> EmitHelper.failFast().emitNext(up, 2))
 		            .expectNext(5)
 		            .thenCancel()
 		            .verify();
@@ -927,10 +927,10 @@ public class FluxZipTest extends FluxOperatorTest<String, String> {
 				Flux.just(2, 3, 5)), 0)
 					.expectSubscription()
 					.then(() -> inner[0] = ((FluxZip.ZipInner) Scannable.from(up).scan(Scannable.Attr.ACTUAL)))
-		            .then(() -> up.emitNext(1))
+		            .then(() -> EmitHelper.failFast().emitNext(up, 1))
 		            .thenRequest(1)
 		            .expectNext(3)
-		            .then(() -> up.emitNext(2))
+		            .then(() -> EmitHelper.failFast().emitNext(up, 2))
 		            .thenRequest(1)
 		            .expectNext(5)
 		            .then(() -> inner[0].onError(new Exception("test")))
@@ -955,10 +955,10 @@ public class FluxZipTest extends FluxOperatorTest<String, String> {
 		                        .hide(), 0)
 					.expectSubscription()
 					.then(() -> inner[0] = (FluxZip.ZipInner) Scannable.from(up).scan(Scannable.Attr.ACTUAL))
-		            .then(() -> up.emitNext(1))
+		            .then(() -> EmitHelper.failFast().emitNext(up, 1))
 		            .thenRequest(1)
 		            .expectNext(3)
-		            .then(() -> up.emitNext(2))
+		            .then(() -> EmitHelper.failFast().emitNext(up, 2))
 		            .thenRequest(1)
 		            .expectNext(5)
 		            .then(() -> assertThat(inner[0].done).isFalse())
@@ -975,13 +975,13 @@ public class FluxZipTest extends FluxOperatorTest<String, String> {
 				1,
 				up.asFlux(),
 				Flux.just(2, 3, 5)), 0)
-		            .then(() -> up.emitNext(1))
+		            .then(() -> EmitHelper.failFast().emitNext(up, 1))
 		            .thenRequest(1)
 		            .expectNext(3)
-		            .then(() -> up.emitNext(2))
+		            .then(() -> EmitHelper.failFast().emitNext(up, 2))
 		            .thenRequest(1)
 		            .expectNext(5)
-		            .then(() -> up.emitComplete())
+		            .then(() -> EmitHelper.failFast().emitComplete(up))
 		            .verifyComplete();
 	}
 

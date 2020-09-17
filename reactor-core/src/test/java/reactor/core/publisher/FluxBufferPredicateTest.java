@@ -70,21 +70,21 @@ public class FluxBufferPredicateTest {
 		StepVerifier.create(bufferUntil)
 				.expectSubscription()
 				.expectNoEvent(Duration.ofMillis(10))
-				.then(() -> sp1.emitNext(1))
-				.then(() -> sp1.emitNext(2))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 1))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 2))
 				.expectNoEvent(Duration.ofMillis(10))
-				.then(() -> sp1.emitNext(3))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 3))
 				.expectNext(Arrays.asList(1, 2, 3))
 				.expectNoEvent(Duration.ofMillis(10))
-				.then(() -> sp1.emitNext(4))
-				.then(() -> sp1.emitNext(5))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 4))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 5))
 				.expectNoEvent(Duration.ofMillis(10))
-				.then(() -> sp1.emitNext(6))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 6))
 				.expectNext(Arrays.asList(4, 5, 6))
 				.expectNoEvent(Duration.ofMillis(10))
-				.then(() -> sp1.emitNext(7))
-				.then(() -> sp1.emitNext(8))
-				.then(sp1::emitComplete)
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 7))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 8))
+				.then(() -> EmitHelper.failFast().emitComplete(sp1))
 				.expectNext(Arrays.asList(7, 8))
 				.expectComplete()
 				.verify();
@@ -133,12 +133,12 @@ public class FluxBufferPredicateTest {
 
 		StepVerifier.create(bufferUntil)
 		            .expectSubscription()
-		            .then(() -> sp1.emitNext(1))
-		            .then(() -> sp1.emitNext(2))
-		            .then(() -> sp1.emitNext(3))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 1))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 2))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 3))
 		            .expectNext(Arrays.asList(1, 2, 3))
-		            .then(() -> sp1.emitNext(4))
-		            .then(() -> sp1.emitError(new RuntimeException("forced failure")))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 4))
+		            .then(() -> EmitHelper.failFast().emitError(sp1, new RuntimeException("forced failure")))
 		            .expectErrorMessage("forced failure")
 		            .verify();
 		assertFalse(Scannable.from(sp1).inners().findAny().isPresent());
@@ -157,12 +157,12 @@ public class FluxBufferPredicateTest {
 
 		StepVerifier.create(bufferUntil)
 					.expectSubscription()
-					.then(() -> sp1.emitNext(1))
-					.then(() -> sp1.emitNext(2))
-					.then(() -> sp1.emitNext(3))
+					.then(() -> EmitHelper.failFast().emitNext(sp1, 1))
+					.then(() -> EmitHelper.failFast().emitNext(sp1, 2))
+					.then(() -> EmitHelper.failFast().emitNext(sp1, 3))
 					.expectNext(Arrays.asList(1, 2, 3))
-					.then(() -> sp1.emitNext(4))
-					.then(() -> sp1.emitNext(5))
+					.then(() -> EmitHelper.failFast().emitNext(sp1, 4))
+					.then(() -> EmitHelper.failFast().emitNext(sp1, 5))
 					.expectErrorMessage("predicate failure")
 					.verify();
 		assertFalse(Scannable.from(sp1).inners().findAny().isPresent());
@@ -177,21 +177,21 @@ public class FluxBufferPredicateTest {
 		StepVerifier.create(bufferUntilOther)
 				.expectSubscription()
 				.expectNoEvent(Duration.ofMillis(10))
-				.then(() -> sp1.emitNext(1))
-				.then(() -> sp1.emitNext(2))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 1))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 2))
 				.expectNoEvent(Duration.ofMillis(10))
-				.then(() -> sp1.emitNext(3))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 3))
 				.expectNext(Arrays.asList(1, 2))
 				.expectNoEvent(Duration.ofMillis(10))
-				.then(() -> sp1.emitNext(4))
-				.then(() -> sp1.emitNext(5))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 4))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 5))
 				.expectNoEvent(Duration.ofMillis(10))
-				.then(() -> sp1.emitNext(6))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 6))
 				.expectNext(Arrays.asList(3, 4, 5))
 				.expectNoEvent(Duration.ofMillis(10))
-				.then(() -> sp1.emitNext(7))
-				.then(() -> sp1.emitNext(8))
-				.then(sp1::emitComplete)
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 7))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 8))
+				.then(() -> EmitHelper.failFast().emitComplete(sp1))
 				.expectNext(Arrays.asList(6, 7, 8))
 				.expectComplete()
 				.verify();
@@ -208,12 +208,12 @@ public class FluxBufferPredicateTest {
 
 		StepVerifier.create(bufferUntilOther)
 		            .expectSubscription()
-		            .then(() -> sp1.emitNext(1))
-		            .then(() -> sp1.emitNext(2))
-		            .then(() -> sp1.emitNext(3))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 1))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 2))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 3))
 		            .expectNext(Arrays.asList(1, 2))
-		            .then(() -> sp1.emitNext(4))
-		            .then(() -> sp1.emitError(new RuntimeException("forced failure")))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 4))
+		            .then(() -> EmitHelper.failFast().emitError(sp1, new RuntimeException("forced failure")))
 		            .expectErrorMessage("forced failure")
 		            .verify();
 		assertFalse(Scannable.from(sp1).inners().findAny().isPresent());
@@ -232,12 +232,12 @@ public class FluxBufferPredicateTest {
 
 		StepVerifier.create(bufferUntilOther)
 					.expectSubscription()
-					.then(() -> sp1.emitNext(1))
-					.then(() -> sp1.emitNext(2))
-					.then(() -> sp1.emitNext(3))
+					.then(() -> EmitHelper.failFast().emitNext(sp1, 1))
+					.then(() -> EmitHelper.failFast().emitNext(sp1, 2))
+					.then(() -> EmitHelper.failFast().emitNext(sp1, 3))
 					.expectNext(Arrays.asList(1, 2))
-					.then(() -> sp1.emitNext(4))
-					.then(() -> sp1.emitNext(5))
+					.then(() -> EmitHelper.failFast().emitNext(sp1, 4))
+					.then(() -> EmitHelper.failFast().emitNext(sp1, 5))
 					.expectErrorMessage("predicate failure")
 					.verify();
 		assertFalse(Scannable.from(sp1).inners().findAny().isPresent());
@@ -383,21 +383,21 @@ public class FluxBufferPredicateTest {
 		StepVerifier.create(bufferWhile)
 				.expectSubscription()
 				.expectNoEvent(Duration.ofMillis(10))
-				.then(() -> sp1.emitNext(1))
-				.then(() -> sp1.emitNext(2))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 1))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 2))
 				.expectNoEvent(Duration.ofMillis(10))
-				.then(() -> sp1.emitNext(3))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 3))
 				.expectNext(Arrays.asList(1, 2))
 				.expectNoEvent(Duration.ofMillis(10))
-				.then(() -> sp1.emitNext(4))
-				.then(() -> sp1.emitNext(5))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 4))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 5))
 				.expectNoEvent(Duration.ofMillis(10))
-				.then(() -> sp1.emitNext(6))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 6))
 				.expectNext(Arrays.asList(4, 5))
 				.expectNoEvent(Duration.ofMillis(10))
-				.then(() -> sp1.emitNext(7))
-				.then(() -> sp1.emitNext(8))
-				.then(sp1::emitComplete)
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 7))
+				.then(() -> EmitHelper.failFast().emitNext(sp1, 8))
+				.then(() -> EmitHelper.failFast().emitComplete(sp1))
 				.expectNext(Arrays.asList(7, 8))
 				.expectComplete()
 				.verify();
@@ -412,26 +412,26 @@ public class FluxBufferPredicateTest {
 				sp1.asFlux(), i -> i % 3 == 0, Flux.listSupplier(), FluxBufferPredicate.Mode.WHILE);
 
 		StepVerifier.create(bufferWhile)
-					.expectSubscription()
-					.expectNoEvent(Duration.ofMillis(10))
-					.then(() -> sp1.emitNext(1))
-					.then(() -> sp1.emitNext(2))
-					.then(() -> sp1.emitNext(3))
-					.expectNoEvent(Duration.ofMillis(10))
-					.then(() -> sp1.emitNext(4))
-					.expectNext(Arrays.asList(3)) //emission of 4 triggers the buffer emit
-					.then(() -> sp1.emitNext(5))
-					.then(() -> sp1.emitNext(6))
-					.expectNoEvent(Duration.ofMillis(10))
-					.then(() -> sp1.emitNext(7)) // emission of 7 triggers the buffer emit
-					.expectNext(Arrays.asList(6))
-					.then(() -> sp1.emitNext(8))
-					.then(() -> sp1.emitNext(9))
-					.expectNoEvent(Duration.ofMillis(10))
-					.then(sp1::emitComplete) // completion triggers the buffer emit
-					.expectNext(Collections.singletonList(9))
-					.expectComplete()
-					.verify(Duration.ofSeconds(1));
+		            .expectSubscription()
+		            .expectNoEvent(Duration.ofMillis(10))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 1))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 2))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 3))
+		            .expectNoEvent(Duration.ofMillis(10))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 4))
+		            .expectNext(Arrays.asList(3)) //emission of 4 triggers the buffer emit
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 5))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 6))
+		            .expectNoEvent(Duration.ofMillis(10))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 7)) // emission of 7 triggers the buffer emit
+		            .expectNext(Arrays.asList(6))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 8))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 9))
+		            .expectNoEvent(Duration.ofMillis(10))
+		            .then(() -> EmitHelper.failFast().emitComplete(sp1)) // completion triggers the buffer emit
+		            .expectNext(Collections.singletonList(9))
+		            .expectComplete()
+		            .verify(Duration.ofSeconds(1));
 		assertFalse(Scannable.from(sp1).inners().findAny().isPresent());
 	}
 
@@ -445,17 +445,17 @@ public class FluxBufferPredicateTest {
 		StepVerifier.create(bufferWhile)
 		            .expectSubscription()
 		            .expectNoEvent(Duration.ofMillis(10))
-		            .then(() -> sp1.emitNext(1))
-		            .then(() -> sp1.emitNext(2))
-		            .then(() -> sp1.emitNext(3))
-		            .then(() -> sp1.emitNext(4))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 1))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 2))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 3))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 4))
 		            .expectNoEvent(Duration.ofMillis(10))
-		            .then(() -> sp1.emitNext(1))
-		            .then(() -> sp1.emitNext(2))
-		            .then(() -> sp1.emitNext(3))
-		            .then(() -> sp1.emitNext(4))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 1))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 2))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 3))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 4))
 		            .expectNoEvent(Duration.ofMillis(10))
-		            .then(sp1::emitComplete)
+		            .then(() -> EmitHelper.failFast().emitComplete(sp1))
 		            .expectComplete()
 		            .verify(Duration.ofSeconds(1));
 		assertFalse(Scannable.from(sp1).inners().findAny().isPresent());
@@ -470,12 +470,12 @@ public class FluxBufferPredicateTest {
 
 		StepVerifier.create(bufferWhile)
 		            .expectSubscription()
-		            .then(() -> sp1.emitNext(1))
-		            .then(() -> sp1.emitNext(2))
-		            .then(() -> sp1.emitNext(3))
-		            .then(() -> sp1.emitNext(4))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 1))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 2))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 3))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 4))
 		            .expectNext(Arrays.asList(3))
-		            .then(() -> sp1.emitError(new RuntimeException("forced failure")))
+		            .then(() -> EmitHelper.failFast().emitError(sp1, new RuntimeException("forced failure")))
 		            .expectErrorMessage("forced failure")
 		            .verify(Duration.ofMillis(100));
 		assertFalse(Scannable.from(sp1).inners().findAny().isPresent());
@@ -494,15 +494,15 @@ public class FluxBufferPredicateTest {
 				}, Flux.listSupplier(), FluxBufferPredicate.Mode.WHILE);
 
 		StepVerifier.create(bufferWhile)
-					.expectSubscription()
-					.then(() -> sp1.emitNext(1)) //ignored
-					.then(() -> sp1.emitNext(2)) //ignored
-					.then(() -> sp1.emitNext(3)) //buffered
-					.then(() -> sp1.emitNext(4)) //ignored, emits buffer
-					.expectNext(Arrays.asList(3))
-					.then(() -> sp1.emitNext(5)) //fails
-					.expectErrorMessage("predicate failure")
-					.verify(Duration.ofMillis(100));
+		            .expectSubscription()
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 1)) //ignored
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 2)) //ignored
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 3)) //buffered
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 4)) //ignored, emits buffer
+		            .expectNext(Arrays.asList(3))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 5)) //fails
+		            .expectErrorMessage("predicate failure")
+		            .verify(Duration.ofMillis(100));
 		assertFalse(Scannable.from(sp1).inners().findAny().isPresent());
 	}
 
@@ -539,10 +539,10 @@ public class FluxBufferPredicateTest {
 		Assert.assertFalse("sp1 has subscribers?", Scannable.from(sp1).inners().findAny().isPresent());
 
 		StepVerifier.create(bufferUntil)
-		            .then(() -> sp1.emitNext(1))
-		            .then(() -> sp1.emitNext(2))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 1))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 2))
 		            .expectNoEvent(Duration.ofMillis(10))
-		            .then(() -> sp1.emitNext(3))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 3))
 		            .expectErrorMessage("supplier failure")
 		            .verify();
 	}
@@ -558,7 +558,7 @@ public class FluxBufferPredicateTest {
 		Assert.assertFalse("sp1 has subscribers?", Scannable.from(sp1).inners().findAny().isPresent());
 
 		StepVerifier.create(bufferUntil)
-		            .then(() -> sp1.emitNext(1))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 1))
 		            .expectErrorMatches(t -> t instanceof NullPointerException &&
 		                "The bufferSupplier returned a null initial buffer".equals(t.getMessage()))
 		            .verify();
@@ -583,14 +583,14 @@ public class FluxBufferPredicateTest {
 
 		StepVerifier.create(bufferWhile)
 		            .then(() -> assertThat(bufferCount.intValue()).isOne())
-		            .then(() -> sp1.emitNext(1))
-		            .then(() -> sp1.emitNext(2))
-		            .then(() -> sp1.emitNext(3))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 1))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 2))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 3))
 		            .then(() -> assertThat(bufferCount.intValue()).isOne())
 		            .expectNoEvent(Duration.ofMillis(10))
-		            .then(() -> sp1.emitNext(10))
-		            .then(() -> sp1.emitNext(11))
-		            .then(sp1::emitComplete)
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 10))
+		            .then(() -> EmitHelper.failFast().emitNext(sp1, 11))
+		            .then(() -> EmitHelper.failFast().emitComplete(sp1))
 		            .expectNext(Arrays.asList(10, 11))
 		            .then(() -> assertThat(bufferCount.intValue()).isOne())
 		            .expectComplete()

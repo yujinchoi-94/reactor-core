@@ -170,12 +170,12 @@ public class FluxOnErrorResumeTest {
 		  .onErrorResume(v -> Flux.range(11, 10))
 		  .subscribe(ts);
 
-		tp.emitNext(1);
-		tp.emitNext(2);
-		tp.emitNext(3);
-		tp.emitNext(4);
-		tp.emitNext(5);
-		tp.emitError(new RuntimeException("forced failure"));
+		EmitHelper.failFast().emitNext(tp, 1);
+		EmitHelper.failFast().emitNext(tp, 2);
+		EmitHelper.failFast().emitNext(tp, 3);
+		EmitHelper.failFast().emitNext(tp, 4);
+		EmitHelper.failFast().emitNext(tp, 5);
+		EmitHelper.failFast().emitError(tp, new RuntimeException("forced failure"));
 
 		ts.assertValues(1, 2, 3, 4, 5, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)
 		  .assertNoError()
@@ -192,12 +192,12 @@ public class FluxOnErrorResumeTest {
 		  .onErrorResume(v -> Flux.range(11, 10))
 		  .subscribe(ts);
 
-		tp.emitNext(1);
-		tp.emitNext(2);
-		tp.emitNext(3);
-		tp.emitNext(4);
-		tp.emitNext(5);
-		tp.emitError(new RuntimeException("forced failure"));
+		EmitHelper.failFast().emitNext(tp, 1);
+		EmitHelper.failFast().emitNext(tp, 2);
+		EmitHelper.failFast().emitNext(tp, 3);
+		EmitHelper.failFast().emitNext(tp, 4);
+		EmitHelper.failFast().emitNext(tp, 5);
+		EmitHelper.failFast().emitError(tp, new RuntimeException("forced failure"));
 
 		ts.assertValues(1, 2, 3, 4, 5, 11, 12, 13, 14, 15)
 		  .assertNotComplete()

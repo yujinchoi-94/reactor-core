@@ -47,16 +47,16 @@ public class FluxJoinTest {
 
 		m.subscribe(ts);
 
-		source1.emitNext(1);
-		source1.emitNext(2);
-		source1.emitNext(4);
+		EmitHelper.failFast().emitNext(source1, 1);
+		EmitHelper.failFast().emitNext(source1, 2);
+		EmitHelper.failFast().emitNext(source1, 4);
 
-		source2.emitNext(16);
-		source2.emitNext(32);
-		source2.emitNext(64);
+		EmitHelper.failFast().emitNext(source2, 16);
+		EmitHelper.failFast().emitNext(source2, 32);
+		EmitHelper.failFast().emitNext(source2, 64);
 
-		source1.emitComplete();
-		source2.emitComplete();
+		EmitHelper.failFast().emitComplete(source1);
+		EmitHelper.failFast().emitComplete(source2);
 
 		ts.assertValues(17, 18, 20, 33, 34, 36, 65, 66, 68)
 		  .assertComplete()
@@ -74,17 +74,17 @@ public class FluxJoinTest {
 		Flux<Integer> m = source1.asFlux().join(source2.asFlux(), just(duration1.asFlux()), just(Flux.never()), add);
 		m.subscribe(ts);
 
-		source1.emitNext(1);
-		source1.emitNext(2);
-		source2.emitNext(16);
+		EmitHelper.failFast().emitNext(source1, 1);
+		EmitHelper.failFast().emitNext(source1, 2);
+		EmitHelper.failFast().emitNext(source2, 16);
 
-		duration1.emitNext(1);
+		EmitHelper.failFast().emitNext(duration1, 1);
 
-		source1.emitNext(4);
-		source1.emitNext(8);
+		EmitHelper.failFast().emitNext(source1, 4);
+		EmitHelper.failFast().emitNext(source1, 8);
 
-		source1.emitComplete();
-		source2.emitComplete();
+		EmitHelper.failFast().emitComplete(source1);
+		EmitHelper.failFast().emitComplete(source2);
 
 		ts.assertValues(17, 18, 20, 24)
 		  .assertComplete()
@@ -103,15 +103,15 @@ public class FluxJoinTest {
 
 		m.subscribe(ts);
 
-		source1.emitNext(1);
-		source1.emitNext(2);
-		source1.emitComplete();
+		EmitHelper.failFast().emitNext(source1, 1);
+		EmitHelper.failFast().emitNext(source1, 2);
+		EmitHelper.failFast().emitComplete(source1);
 
-		source2.emitNext(16);
-		source2.emitNext(32);
-		source2.emitNext(64);
+		EmitHelper.failFast().emitNext(source2, 16);
+		EmitHelper.failFast().emitNext(source2, 32);
+		EmitHelper.failFast().emitNext(source2, 64);
 
-		source2.emitComplete();
+		EmitHelper.failFast().emitComplete(source2);
 
 		ts.assertValues(17, 18, 33, 34, 65, 66)
 		  .assertComplete()
@@ -129,8 +129,8 @@ public class FluxJoinTest {
 
 		m.subscribe(ts);
 
-		source2.emitNext(1);
-		source1.emitError(new RuntimeException("Forced failure"));
+		EmitHelper.failFast().emitNext(source2, 1);
+		EmitHelper.failFast().emitError(source1, new RuntimeException("Forced failure"));
 
 		ts.assertErrorMessage("Forced failure")
 		  .assertNotComplete()
@@ -148,8 +148,8 @@ public class FluxJoinTest {
 
 		m.subscribe(ts);
 
-		source1.emitNext(1);
-		source2.emitError(new RuntimeException("Forced failure"));
+		EmitHelper.failFast().emitNext(source1, 1);
+		EmitHelper.failFast().emitError(source2, new RuntimeException("Forced failure"));
 
 		ts.assertErrorMessage("Forced failure")
 		  .assertNotComplete()
@@ -167,7 +167,7 @@ public class FluxJoinTest {
 		Flux<Integer> m = source1.asFlux().join(source2.asFlux(), just(duration1), just(Flux.never()), add);
 		m.subscribe(ts);
 
-		source1.emitNext(1);
+		EmitHelper.failFast().emitNext(source1, 1);
 
 		ts.assertErrorMessage("Forced failure")
 		  .assertNotComplete()
@@ -185,7 +185,7 @@ public class FluxJoinTest {
 		Flux<Integer> m = source1.asFlux().join(source2.asFlux(), just(Flux.never()), just(duration1), add);
 		m.subscribe(ts);
 
-		source2.emitNext(1);
+		EmitHelper.failFast().emitNext(source2, 1);
 
 		ts.assertErrorMessage("Forced failure")
 		  .assertNotComplete()
@@ -205,7 +205,7 @@ public class FluxJoinTest {
 		Flux<Integer> m = source1.asFlux().join(source2.asFlux(), fail, just(Flux.never()), add);
 		m.subscribe(ts);
 
-		source1.emitNext(1);
+		EmitHelper.failFast().emitNext(source1, 1);
 
 		ts.assertErrorMessage("Forced failure")
 		  .assertNotComplete()
@@ -225,7 +225,7 @@ public class FluxJoinTest {
 		Flux<Integer> m = source1.asFlux().join(source2.asFlux(), just(Flux.never()), fail, add);
 		m.subscribe(ts);
 
-		source2.emitNext(1);
+		EmitHelper.failFast().emitNext(source2, 1);
 
 		ts.assertErrorMessage("Forced failure")
 		  .assertNotComplete()
@@ -246,8 +246,8 @@ public class FluxJoinTest {
 				source1.asFlux().join(source2.asFlux(), just(Flux.never()), just(Flux.never()), fail);
 		m.subscribe(ts);
 
-		source1.emitNext(1);
-		source2.emitNext(2);
+		EmitHelper.failFast().emitNext(source1, 1);
+		EmitHelper.failFast().emitNext(source2, 2);
 
 		ts.assertErrorMessage("Forced failure")
 		  .assertNotComplete()

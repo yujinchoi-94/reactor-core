@@ -59,6 +59,7 @@ import reactor.core.Disposable;
 import reactor.core.Exceptions;
 import reactor.core.Fuseable;
 import reactor.core.Scannable;
+import reactor.core.publisher.EmitHelper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxProcessor;
 import reactor.core.publisher.Hooks;
@@ -432,9 +433,9 @@ public class FluxTests extends AbstractReactorTest {
 	@Test
 	public void promiseAcceptCountCannotExceedOne() {
 		Sinks.One<Object> deferred = Sinks.one();
-		deferred.emitValue("alpha");
+		EmitHelper.failFast().emitValue(deferred, "alpha");
 		try {
-			deferred.emitValue("bravo");
+			EmitHelper.failFast().emitValue(deferred, "bravo");
 		}
 		catch (Exception e) {
 			if(!Exceptions.isCancel(e)) {
@@ -451,8 +452,8 @@ public class FluxTests extends AbstractReactorTest {
 
 		StepVerifier.create(deferred.asMono())
 		            .then(() -> {
-			            deferred.emitError(error);
-			            deferred.emitValue(error);
+			            EmitHelper.failFast().emitError(deferred, error);
+			            EmitHelper.failFast().emitValue(deferred, error);
 		            })
 		            .expectErrorMessage("foo")
 		            .verifyThenAssertThat()
@@ -468,8 +469,8 @@ public class FluxTests extends AbstractReactorTest {
 
 		StepVerifier.create(deferred.asMono())
 		            .then(() -> {
-			            deferred.emitError(error);
-			            deferred.emitValue("alpha");
+			            EmitHelper.failFast().emitError(deferred, error);
+			            EmitHelper.failFast().emitValue(deferred, "alpha");
 		            })
 		            .expectErrorMessage("foo")
 		            .verifyThenAssertThat()
@@ -544,9 +545,9 @@ public class FluxTests extends AbstractReactorTest {
 			  .subscribe();
 
 		for (int j = 0; j < 10; j++) {
-			source.emitNext(1);
+			EmitHelper.failFast().emitNext(source, 1);
 		}
-		source.emitComplete();
+		EmitHelper.failFast().emitComplete(source);
 
 		Assert.assertTrue(result.block(Duration.ofSeconds(5)) >= avgTime * 0.6);
 	}
@@ -903,8 +904,8 @@ public class FluxTests extends AbstractReactorTest {
 
 		afterSubscribe.await(5, TimeUnit.SECONDS);
 
-		globalFeed.emitNext(2223);
-		globalFeed.emitNext(2224);
+		EmitHelper.failFast().emitNext(globalFeed, 2223);
+		EmitHelper.failFast().emitNext(globalFeed, 2224);
 
 		latch.await(5, TimeUnit.SECONDS);
 		assertEquals("Must have counted 4 elements", 0, latch.getCount());
@@ -1108,10 +1109,10 @@ public class FluxTests extends AbstractReactorTest {
 		                                                .doOnError(Throwable::printStackTrace)
 		                                                .subscribe(i -> latch.countDown()));
 
-		streamBatcher.emitNext(12);
-		streamBatcher.emitNext(123);
-		streamBatcher.emitNext(42);
-		streamBatcher.emitNext(666);
+		EmitHelper.failFast().emitNext(streamBatcher, 12);
+		EmitHelper.failFast().emitNext(streamBatcher, 123);
+		EmitHelper.failFast().emitNext(streamBatcher, 42);
+		EmitHelper.failFast().emitNext(streamBatcher, 666);
 
 		boolean finished = latch.await(2, TimeUnit.SECONDS);
 		if (!finished) {
@@ -1430,10 +1431,10 @@ public class FluxTests extends AbstractReactorTest {
 		                                                 .collectList()
 		                                                 .doOnTerminate(doneSemaphore::release))
 					.then(() -> {
-						forkEmitterProcessor.emitNext(1);
-						forkEmitterProcessor.emitNext(2);
-						forkEmitterProcessor.emitNext(3);
-						forkEmitterProcessor.emitComplete();
+						EmitHelper.failFast().emitNext(forkEmitterProcessor, 1);
+						EmitHelper.failFast().emitNext(forkEmitterProcessor, 2);
+						EmitHelper.failFast().emitNext(forkEmitterProcessor, 3);
+						EmitHelper.failFast().emitComplete(forkEmitterProcessor);
 					})
 					.assertNext(res -> assertEquals(Arrays.asList("i0", "done1", "i0", "i1", "done2", "i0", "i1", "i2", "done3"), res))
 					.verifyComplete();

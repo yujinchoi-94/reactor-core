@@ -252,7 +252,7 @@ final class FluxGroupJoin<TLeft, TRight, TLeftEnd, TRightEnd, R>
 			Throwable ex = Exceptions.terminate(ERROR, this);
 
 			for (Sinks.Many<TRight> up : lefts.values()) {
-				up.emitError(ex);
+				EmitHelper.failFast().emitError(up, ex);
 			}
 
 			lefts.clear();
@@ -293,7 +293,7 @@ final class FluxGroupJoin<TLeft, TRight, TLeftEnd, TRightEnd, R>
 
 					if (d && empty) {
 						for (Sinks.Many<?> up : lefts.values()) {
-							up.emitComplete();
+							EmitHelper.failFast().emitComplete(up);
 						}
 
 						lefts.clear();
@@ -375,7 +375,7 @@ final class FluxGroupJoin<TLeft, TRight, TLeftEnd, TRightEnd, R>
 						}
 
 						for (TRight right : rights.values()) {
-							up.emitNext(right);
+							EmitHelper.failFast().emitNext(up, right);
 						}
 					}
 					else if (mode == RIGHT_VALUE) {
@@ -415,7 +415,7 @@ final class FluxGroupJoin<TLeft, TRight, TLeftEnd, TRightEnd, R>
 						}
 
 						for (Sinks.Many<TRight> up : lefts.values()) {
-							up.emitNext(right);
+							EmitHelper.failFast().emitNext(up, right);
 						}
 					}
 					else if (mode == LEFT_CLOSE) {
@@ -424,7 +424,7 @@ final class FluxGroupJoin<TLeft, TRight, TLeftEnd, TRightEnd, R>
 						Sinks.Many<TRight> up = lefts.remove(end.index);
 						cancellations.remove(end);
 						if (up != null) {
-							up.emitComplete();
+							EmitHelper.failFast().emitComplete(up);
 						}
 					}
 					else if (mode == RIGHT_CLOSE) {

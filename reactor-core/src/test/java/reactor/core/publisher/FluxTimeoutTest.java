@@ -120,11 +120,11 @@ public class FluxTimeoutTest {
 			  .timeout(tp.asFlux(), v -> Flux.never(), Flux.range(1, 10))
 		      .subscribe(ts);
 
-		source.emitNext(0);
+		EmitHelper.failFast().emitNext(source, 0);
 
-		tp.emitNext(1);
+		EmitHelper.failFast().emitNext(tp, 1);
 
-		source.emitComplete();
+		EmitHelper.failFast().emitComplete(source);
 
 		Assert.assertFalse("Timeout has subscribers?", Scannable.from(tp).inners().count() != 0);
 
@@ -145,11 +145,11 @@ public class FluxTimeoutTest {
 			  .timeout(tp.asFlux(), v -> Flux.never(), Flux.range(1, 10))
 		      .subscribe(ts);
 
-		source.emitNext(0);
+		EmitHelper.failFast().emitNext(source, 0);
 
-		tp.emitComplete();
+		EmitHelper.failFast().emitComplete(tp);
 
-		source.emitComplete();
+		EmitHelper.failFast().emitComplete(source);
 
 		Assert.assertFalse("Timeout has subscribers?", Scannable.from(tp).inners().count() != 0);
 
@@ -170,11 +170,11 @@ public class FluxTimeoutTest {
 			  .timeout(tp.asFlux(), v -> Flux.never(), Flux.range(1, 10))
 		      .subscribe(ts);
 
-		source.emitNext(0);
+		EmitHelper.failFast().emitNext(source, 0);
 
-		tp.emitError(new RuntimeException("forced failure"));
+		EmitHelper.failFast().emitError(tp, new RuntimeException("forced failure"));
 
-		source.emitComplete();
+		EmitHelper.failFast().emitComplete(source);
 
 		Assert.assertFalse("Timeout has subscribers?", Scannable.from(tp).inners().count() != 0);
 
@@ -258,10 +258,10 @@ public class FluxTimeoutTest {
 			  .timeout(tp.asFlux(), v -> tp.asFlux())
 		      .subscribe(ts);
 
-		tp.emitNext(1);
+		EmitHelper.failFast().emitNext(tp, 1);
 
-		source.emitNext(2);
-		source.emitComplete();
+		EmitHelper.failFast().emitNext(source, 2);
+		EmitHelper.failFast().emitComplete(source);
 
 		ts.assertNoValues()
 		  .assertError(TimeoutException.class)

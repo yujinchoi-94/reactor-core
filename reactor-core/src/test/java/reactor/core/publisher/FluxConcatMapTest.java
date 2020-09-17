@@ -124,8 +124,8 @@ public class  FluxConcatMapTest extends AbstractFluxConcatMapTest {
 		  .assertNoError()
 		  .assertNotComplete();
 
-		source.emitNext(1);
-		source.emitNext(2);
+		EmitHelper.failFast().emitNext(source, 1);
+		EmitHelper.failFast().emitNext(source, 2);
 
 		Assert.assertTrue("source1 no subscribers?", Scannable.from(source1).inners().count() != 0);
 		Assert.assertFalse("source2 has subscribers?", Scannable.from(source2).inners().count() != 0);
@@ -137,7 +137,7 @@ public class  FluxConcatMapTest extends AbstractFluxConcatMapTest {
 				.isEqualTo(Sinks.Emission.FAIL_ZERO_SUBSCRIBER);
 
 		source1.tryEmitComplete().orThrow();
-		source.emitComplete();
+		source.tryEmitComplete().orThrow();
 
 		source2.tryEmitNext(2).orThrow();
 		source2.tryEmitComplete().orThrow();
@@ -164,7 +164,7 @@ public class  FluxConcatMapTest extends AbstractFluxConcatMapTest {
 		  .assertNoError()
 		  .assertNotComplete();
 
-		source.emitNext(1);
+		source.tryEmitNext(1).orThrow();
 
 		Assert.assertTrue("source1 no subscribers?", Scannable.from(source1).inners().count() != 0);
 		Assert.assertFalse("source2 has subscribers?", Scannable.from(source2).inners().count() != 0);
@@ -176,8 +176,8 @@ public class  FluxConcatMapTest extends AbstractFluxConcatMapTest {
 				.isEqualTo(Sinks.Emission.FAIL_ZERO_SUBSCRIBER);
 
 		source1.tryEmitComplete().orThrow();
-		source.emitNext(2);
-		source.emitComplete();
+		source.tryEmitNext(2).orThrow();
+		source.tryEmitComplete().orThrow();
 
 		source2.tryEmitNext(2).orThrow();
 		source2.tryEmitComplete().orThrow();

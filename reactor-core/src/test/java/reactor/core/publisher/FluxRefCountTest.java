@@ -201,14 +201,14 @@ public class FluxRefCountTest {
 
 		Assert.assertTrue("sp has no subscribers?", Scannable.from(e).inners().count() != 0);
 
-		e.emitNext(1);
-		e.emitNext(2);
+		EmitHelper.failFast().emitNext(e, 1);
+		EmitHelper.failFast().emitNext(e, 2);
 
 		ts1.cancel();
 
 		Assert.assertTrue("sp has no subscribers?", Scannable.from(e).inners().count() != 0);
 
-		e.emitNext(3);
+		EmitHelper.failFast().emitNext(e, 3);
 
 		ts2.cancel();
 
@@ -243,14 +243,14 @@ public class FluxRefCountTest {
 
 		Assert.assertTrue("sp has no subscribers?", Scannable.from(e).inners().count() != 0);
 
-		e.emitNext(1);
-		e.emitNext(2);
+		EmitHelper.failFast().emitNext(e, 1);
+		EmitHelper.failFast().emitNext(e, 2);
 
 		ts1.cancel();
 
 		Assert.assertTrue("sp has no subscribers?", Scannable.from(e).inners().count() != 0);
 
-		e.emitNext(3);
+		EmitHelper.failFast().emitNext(e, 3);
 
 		ts2.cancel();
 
@@ -417,10 +417,10 @@ public class FluxRefCountTest {
 															.toFuture();
 
 		for (long i = 0; i < 10; i++) {
-			p.emitNext(i);
+			EmitHelper.failFast().emitNext(p, i);
 			Thread.sleep(1);
 		}
-		p.emitComplete();
+		EmitHelper.failFast().emitComplete(p);
 
 		assertThat(result.get(10, TimeUnit.MILLISECONDS)
 						 .size()).isEqualTo(10);

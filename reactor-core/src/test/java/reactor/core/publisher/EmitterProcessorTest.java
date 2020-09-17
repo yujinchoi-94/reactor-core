@@ -35,7 +35,6 @@ import org.reactivestreams.Subscription;
 
 import reactor.core.CoreSubscriber;
 import reactor.core.Disposable;
-import reactor.core.Exceptions;
 import reactor.core.Fuseable;
 import reactor.core.Scannable;
 import reactor.core.scheduler.Scheduler;
@@ -123,7 +122,7 @@ public class EmitterProcessorTest {
 		assertThat(processor.sourceMode).as("sourceMode").isEqualTo(Fuseable.ASYNC);
 
 		processor.onNext(null);
-		assertThatThrownBy(() -> processor.emitNext(null)).isInstanceOf(NullPointerException.class);
+		assertThatThrownBy(() -> EmitHelper.failFast().emitNext(processor, null)).isInstanceOf(NullPointerException.class);
 	}
 
 	@Test
@@ -870,7 +869,7 @@ public class EmitterProcessorTest {
 
 		StepVerifier.create(emitterProcessor)
 		            .expectNext(1)
-		            .then(emitterProcessor::emitComplete)
+		            .then(() -> EmitHelper.failFast().emitComplete(emitterProcessor))
 		            .verifyComplete();
 	}
 
@@ -899,7 +898,7 @@ public class EmitterProcessorTest {
 		assertThat(emitterProcessor.tryEmitNext(1)).as("filling buffer").isEqualTo(Sinks.Emission.OK);
 		//test proper
 		//this is "discarded" but no hook can be invoked, so effectively dropped on the floor
-		emitterProcessor.emitNext(2);
+		EmitHelper.failFast().emitNext(emitterProcessor, 2);
 
 		StepVerifier.create(emitterProcessor)
 		            .expectNext(1)

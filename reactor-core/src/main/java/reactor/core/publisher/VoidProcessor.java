@@ -104,13 +104,6 @@ final class VoidProcessor<T> extends MonoProcessor<T> implements Sinks.One<T> {
 	}
 
 	@Override
-	public void emitEmpty() {
-		//no particular error condition handling for onComplete
-		@SuppressWarnings("unused")
-		Emission emission = tryEmitEmpty();
-	}
-
-	@Override
 	public Emission tryEmitEmpty() {
 		VoidInner<?>[] array = SUBSCRIBERS.getAndSet(this, TERMINATED);
 
@@ -126,17 +119,9 @@ final class VoidProcessor<T> extends MonoProcessor<T> implements Sinks.One<T> {
 
 	@Override
 	public final void onError(Throwable cause) {
-		emitError(cause);
+		EmitHelper.failFast().emitError(this, cause);
 	}
 
-
-	@Override
-	public void emitError(Throwable error) {
-		Emission result = tryEmitError(error);
-		if (result == Emission.FAIL_TERMINATED) {
-			Operators.onErrorDroppedMulticast(error, subscribers);
-		}
-	}
 
 	@Override
 	public Emission tryEmitError(Throwable cause) {
@@ -157,17 +142,7 @@ final class VoidProcessor<T> extends MonoProcessor<T> implements Sinks.One<T> {
 
 	@Override
 	public final void onNext(@Nullable T value) {
-		emitValue(value);
-	}
-
-	@Override
-	public void emitValue(@Nullable T value) {
-		if (value != null) {
-			Operators.onNextDroppedMulticast(value, subscribers);
-			emitError(new UnsupportedOperationException("emitValue on VoidProcessor, which should only be used as a Sinks.Empty"));
-			return;
-		}
-		tryEmitEmpty();
+		EmitHelper.failFast().emitValue(this, value);
 	}
 
 	@Override

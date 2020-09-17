@@ -90,7 +90,7 @@ public class MonoTimeoutTest {
 		source.timeout(tp.asFlux())
 		      .subscribe(ts);
 
-		tp.emitNext(1);
+		EmitHelper.failFast().emitNext(tp, 1);
 
 		source.onNext(2);
 		source.onComplete();

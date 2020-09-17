@@ -318,13 +318,13 @@ public class DirectProcessorTest {
 	@Test
 	public void emitNextWithNoSubscriberJustDiscardsWithoutTerminatingTheSink() {
 		DirectProcessor<Integer> directProcessor = DirectProcessor.create();
-		directProcessor.emitNext(1);
+		directProcessor.onNext(1);
 
 		StepVerifier.create(directProcessor)
 		            .expectSubscription()
 		            .expectNoEvent(Duration.ofSeconds(1))
-		            .then(() -> directProcessor.emitNext(2))
-		            .then(directProcessor::emitComplete)
+		            .then(() -> directProcessor.onNext(2))
+		            .then(directProcessor::onComplete)
 		            .expectNext(2)
 		            .expectComplete()
 		            .verify(Duration.ofSeconds(5));

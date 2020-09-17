@@ -42,31 +42,31 @@ public class FluxSampleFirstTest {
 		   .sampleFirst(v -> v == 1 ? sp2.asFlux() : sp3.asFlux())
 		   .subscribe(ts);
 
-		sp1.emitNext(1);
+		EmitHelper.failFast().emitNext(sp1, 1);
 
 		ts.assertValues(1)
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp1.emitNext(2);
+		EmitHelper.failFast().emitNext(sp1, 2);
 
 		ts.assertValues(1)
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp2.emitNext(1);
+		EmitHelper.failFast().emitNext(sp2, 1);
 
 		ts.assertValues(1)
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp1.emitNext(3);
+		EmitHelper.failFast().emitNext(sp1, 3);
 
 		ts.assertValues(1, 3)
 		  .assertNoError()
 		  .assertNotComplete();
 
-		sp1.emitComplete();
+		EmitHelper.failFast().emitComplete(sp1);
 
 		ts.assertValues(1, 3)
 		  .assertNoError()
@@ -89,8 +89,8 @@ public class FluxSampleFirstTest {
 		   .sampleFirst(v -> v == 1 ? sp2.asFlux() : sp3.asFlux())
 		   .subscribe(ts);
 
-		sp1.emitNext(1);
-		sp1.emitError(new RuntimeException("forced failure"));
+		EmitHelper.failFast().emitNext(sp1, 1);
+		EmitHelper.failFast().emitError(sp1, new RuntimeException("forced failure"));
 
 		ts.assertValues(1)
 		  .assertError(RuntimeException.class)
@@ -114,8 +114,8 @@ public class FluxSampleFirstTest {
 		   .sampleFirst(v -> v == 1 ? sp2.asFlux() : sp3.asFlux())
 		   .subscribe(ts);
 
-		sp1.emitNext(1);
-		sp2.emitError(new RuntimeException("forced failure"));
+		EmitHelper.failFast().emitNext(sp1, 1);
+		EmitHelper.failFast().emitError(sp2, new RuntimeException("forced failure"));
 
 		ts.assertValues(1)
 		  .assertError(RuntimeException.class)
@@ -139,7 +139,7 @@ public class FluxSampleFirstTest {
 		})
 		   .subscribe(ts);
 
-		sp1.emitNext(1);
+		EmitHelper.failFast().emitNext(sp1, 1);
 
 		ts.assertValues(1)
 		  .assertError(RuntimeException.class)
@@ -159,7 +159,7 @@ public class FluxSampleFirstTest {
 		   .sampleFirst(v -> null)
 		   .subscribe(ts);
 
-		sp1.emitNext(1);
+		EmitHelper.failFast().emitNext(sp1, 1);
 
 		ts.assertValues(1)
 		  .assertError(NullPointerException.class)

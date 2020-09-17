@@ -158,23 +158,23 @@ public class FluxWindowWhenTest {
 		sp1.asFlux().windowWhen(sp2.asFlux(), v -> v == 1 ? sp3.asFlux() : sp4.asFlux())
 		   .subscribe(ts);
 
-		sp1.emitNext(1);
+		EmitHelper.failFast().emitNext(sp1, 1);
 
-		sp2.emitNext(1);
+		EmitHelper.failFast().emitNext(sp2, 1);
 
-		sp1.emitNext(2);
+		EmitHelper.failFast().emitNext(sp1, 2);
 
-		sp2.emitNext(2);
+		EmitHelper.failFast().emitNext(sp2, 2);
 
-		sp1.emitNext(3);
+		EmitHelper.failFast().emitNext(sp1, 3);
 
-		sp3.emitNext(1);
+		EmitHelper.failFast().emitNext(sp3, 1);
 
-		sp1.emitNext(4);
+		EmitHelper.failFast().emitNext(sp1, 4);
 
-		sp4.emitNext(1);
+		EmitHelper.failFast().emitNext(sp4, 1);
 
-		sp1.emitComplete();
+		EmitHelper.failFast().emitComplete(sp1);
 
 		ts.assertValueCount(2)
 		  .assertNoError()
@@ -201,24 +201,24 @@ public class FluxWindowWhenTest {
 		source.asFlux().windowWhen(openSelector.asFlux(), v -> v == 1 ? closeSelectorFor1.asFlux() : closeSelectorForOthers.asFlux())
 		      .subscribe(ts);
 
-		source.emitNext(1);
+		EmitHelper.failFast().emitNext(source, 1);
 
-		openSelector.emitNext(1);
+		EmitHelper.failFast().emitNext(openSelector, 1);
 
-		source.emitNext(2);
+		EmitHelper.failFast().emitNext(source, 2);
 
-		openSelector.emitNext(2);
+		EmitHelper.failFast().emitNext(openSelector, 2);
 
-		source.emitNext(3);
+		EmitHelper.failFast().emitNext(source, 3);
 
-		closeSelectorFor1.emitNext(1);
+		EmitHelper.failFast().emitNext(closeSelectorFor1, 1);
 
-		source.emitNext(4);
+		EmitHelper.failFast().emitNext(source, 4);
 
-		closeSelectorForOthers.emitNext(1);
+		EmitHelper.failFast().emitNext(closeSelectorForOthers, 1);
 
-		openSelector.emitComplete();
-		source.emitComplete(); //TODO evaluate, should the open completing cause the source to lose subscriber?
+		EmitHelper.failFast().emitComplete(openSelector);
+		EmitHelper.failFast().emitComplete(source); //TODO evaluate, should the open completing cause the source to lose subscriber?
 
 		ts.assertValueCount(2)
 		  .assertNoError()
@@ -245,16 +245,16 @@ public class FluxWindowWhenTest {
 		source.asFlux().windowWhen(openSelector.asFlux(), v -> v == 1 ? closeSelectorFor1.asFlux() : closeSelectorOthers.asFlux())
 		      .subscribe(ts);
 
-		openSelector.emitNext(1);
+		EmitHelper.failFast().emitNext(openSelector, 1);
 
-		source.emitNext(1);
-		source.emitNext(2);
-		source.emitNext(3);
+		EmitHelper.failFast().emitNext(source, 1);
+		EmitHelper.failFast().emitNext(source, 2);
+		EmitHelper.failFast().emitNext(source, 3);
 
-		closeSelectorFor1.emitComplete();
+		EmitHelper.failFast().emitComplete(closeSelectorFor1);
 
-		source.emitNext(4);
-		source.emitComplete();
+		EmitHelper.failFast().emitNext(source, 4);
+		EmitHelper.failFast().emitComplete(source);
 
 		ts.assertValueCount(1)
 		  .assertNoError()
@@ -282,17 +282,17 @@ public class FluxWindowWhenTest {
 								   .windowWhen(bucketOpening.asFlux(), u -> boundaryFlux.asFlux())
 								   .flatMap(Flux::buffer)
 								   .collectList())
-					.then(() -> {
-						numbers.emitNext(1);
-						numbers.emitNext(2);
-						bucketOpening.emitNext(1);
-						numbers.emitNext(3);
-						bucketOpening.emitNext(1);
-						numbers.emitNext(5);
-						boundaryFlux.emitNext(1);
-						bucketOpening.emitNext(1);
-						boundaryFlux.emitComplete();
-						numbers.emitComplete();
+		            .then(() -> {
+			            EmitHelper.failFast().emitNext(numbers, 1);
+			            EmitHelper.failFast().emitNext(numbers, 2);
+			            EmitHelper.failFast().emitNext(bucketOpening, 1);
+			            EmitHelper.failFast().emitNext(numbers, 3);
+			            EmitHelper.failFast().emitNext(bucketOpening, 1);
+			            EmitHelper.failFast().emitNext(numbers, 5);
+			            EmitHelper.failFast().emitNext(boundaryFlux, 1);
+			            EmitHelper.failFast().emitNext(bucketOpening, 1);
+			            EmitHelper.failFast().emitComplete(boundaryFlux);
+			            EmitHelper.failFast().emitComplete(numbers);
 						//"the collected overlapping lists are available"
 					})
 					.assertNext(res -> assertThat(res).containsExactly(Arrays.asList(3, 5), Arrays.asList(5)))

@@ -25,6 +25,8 @@ import reactor.core.Scannable;
 import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
+import static reactor.core.publisher.EmitHelper.failFast;
+
 /**
  * @author Stephane Maldini
  */
@@ -49,17 +51,17 @@ final class DelegateSinkOneMonoProcessor<IN> extends MonoProcessor<IN> {
 
 	@Override
 	public void onComplete() {
-		sink.emitEmpty();
+		failFast().emitEmpty(sink);
 	}
 
 	@Override
 	public void onError(Throwable t) {
-		sink.emitError(t);
+		failFast().emitError(sink, t);
 	}
 
 	@Override
 	public void onNext(@Nullable IN in) {
-		sink.emitValue(in);
+		failFast().emitValue(sink, in);
 	}
 
 	@Override

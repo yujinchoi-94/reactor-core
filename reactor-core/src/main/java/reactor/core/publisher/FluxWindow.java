@@ -173,12 +173,12 @@ final class FluxWindow<T> extends InternalFluxOperator<T, Flux<T>> {
 
 			i++;
 
-			w.emitNext(t);
+			EmitHelper.failFast().emitNext(w, t);
 
 			if (i == size) {
 				index = 0;
 				window = null;
-				w.emitComplete();
+				EmitHelper.failFast().emitComplete(w);
 			}
 			else {
 				index = i;
@@ -195,7 +195,7 @@ final class FluxWindow<T> extends InternalFluxOperator<T, Flux<T>> {
 			Sinks.Many<T> w = window;
 			if (w != null) {
 				window = null;
-				w.emitError(t);
+				EmitHelper.failFast().emitError(w, t);
 			}
 
 			actual.onError(t);
@@ -210,7 +210,7 @@ final class FluxWindow<T> extends InternalFluxOperator<T, Flux<T>> {
 			Sinks.Many<T> w = window;
 			if (w != null) {
 				window = null;
-				w.emitComplete();
+				EmitHelper.failFast().emitComplete(w);
 			}
 
 			actual.onComplete();
@@ -344,7 +344,7 @@ final class FluxWindow<T> extends InternalFluxOperator<T, Flux<T>> {
 			i++;
 
 			if (w != null) {
-				w.emitNext(t);
+				EmitHelper.failFast().emitNext(w, t);
 			}
 			else {
 				Operators.onDiscard(t, ctx);
@@ -353,7 +353,7 @@ final class FluxWindow<T> extends InternalFluxOperator<T, Flux<T>> {
 			if (i == size) {
 				window = null;
 				if (w != null) {
-					w.emitComplete();
+					EmitHelper.failFast().emitComplete(w);
 				}
 			}
 
@@ -376,7 +376,7 @@ final class FluxWindow<T> extends InternalFluxOperator<T, Flux<T>> {
 			Sinks.Many<T> w = window;
 			if (w != null) {
 				window = null;
-				w.emitError(t);
+				EmitHelper.failFast().emitError(w, t);
 			}
 
 			actual.onError(t);
@@ -392,7 +392,7 @@ final class FluxWindow<T> extends InternalFluxOperator<T, Flux<T>> {
 			Sinks.Many<T> w = window;
 			if (w != null) {
 				window = null;
-				w.emitComplete();
+				EmitHelper.failFast().emitComplete(w);
 			}
 
 			actual.onComplete();
@@ -553,7 +553,7 @@ final class FluxWindow<T> extends InternalFluxOperator<T, Flux<T>> {
 			i++;
 
 			for (Sinks.Many<T> w : this) {
-				w.emitNext(t);
+				EmitHelper.failFast().emitNext(w, t);
 			}
 
 			int p = produced + 1;
@@ -562,7 +562,7 @@ final class FluxWindow<T> extends InternalFluxOperator<T, Flux<T>> {
 
 				Sinks.Many<T> w = poll();
 				if (w != null) {
-					w.emitComplete();
+					EmitHelper.failFast().emitComplete(w);
 				}
 			}
 			else {
@@ -586,7 +586,7 @@ final class FluxWindow<T> extends InternalFluxOperator<T, Flux<T>> {
 			done = true;
 
 			for (Sinks.Many<T> w : this) {
-				w.emitError(t);
+				EmitHelper.failFast().emitError(w, t);
 			}
 			clear();
 
@@ -602,7 +602,7 @@ final class FluxWindow<T> extends InternalFluxOperator<T, Flux<T>> {
 			done = true;
 
 			for (Sinks.Many<T> w : this) {
-				w.emitComplete();
+				EmitHelper.failFast().emitComplete(w);
 			}
 			clear();
 

@@ -143,11 +143,11 @@ public class MonoTakeLastOneTest {
 						)
 				)
 				.then(() -> {
-					sink2.emitNext("3");
-					sink3.emitNext("1");
-					sink1.emitComplete();
-					sink2.emitComplete();
-					sink3.emitComplete();
+					EmitHelper.failFast().emitNext(sink2, "3");
+					EmitHelper.failFast().emitNext(sink3, "1");
+					EmitHelper.failFast().emitComplete(sink1);
+					EmitHelper.failFast().emitComplete(sink2);
+					EmitHelper.failFast().emitComplete(sink3);
 				})
 				.expectNextMatches(objects -> objects.getT1().equals("Missing Value1") && objects.getT2().equals("3") && objects.getT3().equals("1"))
 				.verifyComplete();

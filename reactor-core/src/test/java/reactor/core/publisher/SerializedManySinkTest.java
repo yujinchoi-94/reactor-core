@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
+
 import reactor.core.Exceptions;
 import reactor.core.publisher.Sinks.Emission;
 import reactor.test.StepVerifier;
@@ -49,7 +50,7 @@ public class SerializedManySinkTest {
 					            .as("emission")
 					            .isEqualTo(Emission.FAIL_OVERFLOW);
 		            })
-		            .then(sink::emitComplete)
+		            .then(() -> EmitHelper.failFast().emitComplete(sink))
 		            .verifyComplete();
 	}
 
@@ -62,7 +63,7 @@ public class SerializedManySinkTest {
 
 		StepVerifier.create(sink.asFlux(), 0)
 		            .expectSubscription()
-		            .then(() -> sink.emitNext("boom"))
+		            .then(() -> EmitHelper.failFast().emitNext(sink, "boom"))
 		            .verifyErrorMatches(Exceptions::isOverflow);
 	}
 
@@ -105,7 +106,7 @@ public class SerializedManySinkTest {
 
 	static class EmptyMany<T> implements Sinks.Many<T> {
 
-		final Sinks.Many<T> delegate = DirectProcessor.create();
+		final Sinks.Many<T> delegate = Sinks.many().unsafe().multicast().onBackpressureBuffer();
 
 		@Override
 		public Emission tryEmitNext(T o) {
@@ -123,18 +124,8 @@ public class SerializedManySinkTest {
 		}
 
 		@Override
-		public void emitNext(T o) {
-			throw new IllegalStateException("Not expected to be called");
-		}
-
-		@Override
-		public void emitComplete() {
-			delegate.emitComplete();
-		}
-
-		@Override
-		public void emitError(Throwable error) {
-			delegate.emitError(error);
+		public Context currentContext() {
+			return delegate.currentContext();
 		}
 
 		@Override

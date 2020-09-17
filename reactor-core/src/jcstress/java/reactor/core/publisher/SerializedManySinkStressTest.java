@@ -102,18 +102,8 @@ public class SerializedManySinkStressTest {
 		}
 
 		@Override
-		public void emitNext(T t) {
-			tryEmitNext(t).orThrow();
-		}
-
-		@Override
-		public void emitError(Throwable error) {
-			tryEmitError(error).orThrow();
-		}
-
-		@Override
-		public void emitComplete() {
-			tryEmitComplete().orThrow();
+		public Context currentContext() {
+			return Context.empty();
 		}
 
 		@Override

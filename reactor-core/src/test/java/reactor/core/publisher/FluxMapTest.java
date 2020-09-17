@@ -155,9 +155,9 @@ public class FluxMapTest extends FluxOperatorTest<String, String> {
 		  .subscribe(ts);
 
 		for (int i = 1; i < 11; i++) {
-			up.emitNext(i);
+			EmitHelper.failFast().emitNext(up, i);
 		}
-		up.emitComplete();
+		EmitHelper.failFast().emitComplete(up);
 
 		ts.assertValues(2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
 		  .assertNoError()
@@ -176,13 +176,13 @@ public class FluxMapTest extends FluxOperatorTest<String, String> {
 		    .flatMap(w -> up.asFlux().map(v -> v + 1))
 		    .subscribe(ts);
 
-		up.emitNext(1);
+		EmitHelper.failFast().emitNext(up, 1);
 
 		ts.assertValues(2)
 		  .assertNoError()
 		  .assertNotComplete();
 
-		up.emitComplete();
+		EmitHelper.failFast().emitComplete(up);
 
 		ts.assertValues(2)
 		  .assertNoError()

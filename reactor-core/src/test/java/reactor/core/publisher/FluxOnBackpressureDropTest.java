@@ -100,18 +100,18 @@ public class FluxOnBackpressureDropTest {
 		  .onBackpressureDrop(drops::add)
 		  .subscribe(ts);
 
-		tp.emitNext(1);
+		EmitHelper.failFast().emitNext(tp, 1);
 
 		ts.request(2);
 
-		tp.emitNext(2);
-		tp.emitNext(3);
-		tp.emitNext(4);
+		EmitHelper.failFast().emitNext(tp, 2);
+		EmitHelper.failFast().emitNext(tp, 3);
+		EmitHelper.failFast().emitNext(tp, 4);
 
 		ts.request(1);
 
-		tp.emitNext(5);
-		tp.emitComplete();
+		EmitHelper.failFast().emitNext(tp, 5);
+		EmitHelper.failFast().emitComplete(tp);
 
 		ts.assertValues(2, 3, 5)
 		  .assertComplete()

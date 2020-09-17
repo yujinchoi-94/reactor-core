@@ -227,7 +227,7 @@ public class FluxBufferTimeoutTest {
 		            .then(() -> assertThat(requestedOutstanding.get()).isEqualTo(0))
 		            .thenRequest(2)
 		            .then(() -> assertThat(requestedOutstanding.get()).isEqualTo(10))
-		            .then(() -> sink.emitNext("a"))
+		            .then(() -> EmitHelper.failFast().emitNext(sink, "a"))
 		            .thenAwait(Duration.ofMillis(100))
 		            .assertNext(s -> assertThat(s).containsExactly("a"))
 		            .then(() -> assertThat(requestedOutstanding.get()).isEqualTo(9))

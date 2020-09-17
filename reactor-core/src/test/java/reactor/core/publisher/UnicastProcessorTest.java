@@ -26,7 +26,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.LockSupport;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import org.junit.Test;
@@ -273,7 +272,7 @@ public class UnicastProcessorTest {
 					            .as("emission")
 					            .isEqualTo(Sinks.Emission.FAIL_OVERFLOW);
 		            })
-		            .then(processor::emitComplete)
+		            .then(() -> EmitHelper.failFast().emitComplete(processor))
 		            .verifyComplete();
 	}
 
@@ -283,7 +282,7 @@ public class UnicastProcessorTest {
 
 		StepVerifier.create(processor, 0)
 		            .expectSubscription()
-		            .then(() -> processor.emitNext("boom"))
+		            .then(() -> EmitHelper.failFast().emitNext(processor, "boom"))
 		            .verifyErrorMatches(Exceptions::isOverflow);
 	}
 
@@ -296,7 +295,7 @@ public class UnicastProcessorTest {
 
 		StepVerifier.create(unicastProcessor)
 		            .expectNext(1)
-		            .then(unicastProcessor::emitComplete)
+		            .then(() -> EmitHelper.failFast().emitComplete(unicastProcessor))
 		            .verifyComplete();
 	}
 
@@ -317,23 +316,23 @@ public class UnicastProcessorTest {
 	}
 
 	@Test
-	public void emitNextWithNoSubscriberAndBoundedQueueIgnoresValueAndKeepsSinkOpen() {
+	public void onNextWithNoSubscriberAndBoundedQueueIgnoresValueAndKeepsSinkOpen() {
 		UnicastProcessor<Integer> unicastProcessor = UnicastProcessor.create(Queues.<Integer>one().get());
 		//fill the buffer
 		unicastProcessor.tryEmitNext(1);
 		//this "overflows" but keeps the sink open. since there's no subscriber, there's no Context so no real discarding
-		unicastProcessor.emitNext(2);
+		unicastProcessor.onNext(2);
 
 		//let's verify we get the buffer's content
 		StepVerifier.create(unicastProcessor)
 		            .expectNext(1) //from the buffer
 		            .expectNoEvent(Duration.ofMillis(500))
-		            .then(unicastProcessor::emitComplete)
+		            .then(() -> EmitHelper.failFast().emitComplete(unicastProcessor))
 		            .verifyComplete();
 	}
 
 	@Test //TODO that onOverflow API isn't exposed via Sinks. But maybe it should be generalized?
-	public void emitNextWithNoSubscriberAndBoundedQueueAndHandlerHandlesValueAndKeepsSinkOpen() {
+	public void onNextWithNoSubscriberAndBoundedQueueAndHandlerHandlesValueAndKeepsSinkOpen() {
 		Disposable sinkDisposed = Disposables.single();
 		List<Integer> discarded = new CopyOnWriteArrayList<>();
 		UnicastProcessor<Integer> unicastProcessor = UnicastProcessor.create(Queues.<Integer>one().get(),
@@ -341,12 +340,13 @@ public class UnicastProcessorTest {
 		//fill the buffer
 		unicastProcessor.tryEmitNext(1);
 		//this "overflows" but keeps the sink open
-		unicastProcessor.emitNext(2);
+
+		unicastProcessor.onNext(2);
 
 		assertThat(discarded).containsExactly(2);
 		assertThat(sinkDisposed.isDisposed()).as("sinkDisposed").isFalse();
 
-		unicastProcessor.emitComplete();
+		EmitHelper.failFast().emitComplete(unicastProcessor);
 
 		//let's verify we get the buffer's content
 		StepVerifier.create(unicastProcessor)

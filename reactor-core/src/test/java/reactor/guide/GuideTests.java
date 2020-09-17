@@ -48,7 +48,7 @@ import reactor.core.Disposable;
 import reactor.core.Exceptions;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.ConnectableFlux;
-import reactor.core.publisher.DirectProcessor;
+import reactor.core.publisher.EmitHelper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -202,20 +202,20 @@ public class GuideTests {
 
 	@Test
 	public void advancedHot() {
-		Sinks.Many<String> hotSource = DirectProcessor.create();
+		Sinks.Many<String> hotSource = Sinks.many().multicast().onBackpressureBuffer(); //FIXME in adoc
 
 		Flux<String> hotFlux = hotSource.asFlux().map(String::toUpperCase);
 
 		hotFlux.subscribe(d -> System.out.println("Subscriber 1 to Hot Source: "+d));
 
-		hotSource.emitNext("blue");
-		hotSource.emitNext("green");
+		EmitHelper.failFast().emitNext(hotSource, "blue");
+		EmitHelper.failFast().emitNext(hotSource, "green");
 
 		hotFlux.subscribe(d -> System.out.println("Subscriber 2 to Hot Source: "+d));
 
-		hotSource.emitNext("orange");
-		hotSource.emitNext("purple");
-		hotSource.emitComplete();
+		EmitHelper.failFast().emitNext(hotSource, "orange");
+		EmitHelper.failFast().emitNext(hotSource, "purple");
+		EmitHelper.failFast().emitComplete(hotSource);
 	}
 
 	@Test
