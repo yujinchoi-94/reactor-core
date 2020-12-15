@@ -116,6 +116,34 @@ import reactor.util.retry.Retry;
  */
 public abstract class Flux<T> implements CorePublisher<T> {
 
+	public static void main(String[] args) throws InterruptedException {
+		final ConnectableFlux<Long> publish = Flux.interval(Duration.ofMillis(100))
+		                                          .doOnSubscribe(__ -> System.out.println("Subscribed"))
+		                                          .doOnCancel(() -> System.out.println("Cancelled"))
+		                                          .replay();
+
+		final Flux<Long> refCount = publish.refCount(1);
+
+		final Disposable disposable1 = refCount.subscribe();
+		final Disposable disposable2 = refCount.subscribe();
+
+		Thread.sleep(2000);
+
+		System.out.println("Disposing");
+		disposable1.dispose();
+		disposable2.dispose();
+
+		System.out.println("Subscribing to RefCount again");
+		refCount.subscribe();
+
+		Thread.sleep(2000);
+
+		System.out.println("Calling connect");
+		publish.connect();
+
+		Thread.sleep(2000);
+	}
+
 //	 ==============================================================================================================
 //	 Static Generators
 //	 ==============================================================================================================

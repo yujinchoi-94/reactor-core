@@ -29,6 +29,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
@@ -1865,6 +1866,82 @@ public abstract class Mono<T> implements CorePublisher<T> {
 		return onAssembly(new MonoCacheTime<>(this,
 				ttlForValue, ttlForError, ttlForEmpty,
 				Schedulers.parallel()));
+	}
+
+	public final ReconnectMono<T> cache2() {
+
+	}
+
+
+	// 1) We introduce ConnectableMono as an abstract class
+	//  1.1) .connect()
+	//  1.2) .reset()
+	//  1.3) .refCount()
+	// 2) We provide an extension to CM which is ReconnectableMono
+	// 3) We provide an extension to CM which is ConnectableMonoLift
+	// 4) cache() -> RM -> cache(BiConsumer<T, ConnectableMono<T>>) -> cache(Predicate<T>, BiConsumer<T, ConnectableMono<T>>)
+	// 5) refCount -> refCount(1) ->
+	public static void main(String[] args) {
+		ConnectableMono<T> connectableMono;
+
+		connectableMono.connect();
+		connectableMono.reset();
+		connectableMono
+				.refCnt(2) // wait for specific n of subscribers || cancel upstream when the actual subscribers dissapear
+				// reset() || if sourse is not yet resolved the reset() should
+				// otherwise is here - do nothing
+				.subscribe();
+
+
+
+
+
+
+		ReconnectMono<String> connectable = Mono.just("")
+		                                        .cache2(value -> { // reset logic
+			                                        if (value is still valid){
+				                                        return true;
+			                                        }
+			                                        // mean reset() and
+			                                        // subscribe to the
+			                                        // suroce again
+			                                        return false;
+		                                        });
+
+		connectable.isPending() // if
+
+		Mono<String> hiddenReconnectableMono = Mono.just("")
+		                                           .cache2(
+														    value -> { // reset logic
+															    if (value is still valid){
+																    return true;
+															    }
+															    // mean reset() and
+															    // subscribe to the
+															    // suroce again
+															    return false;
+														    }
+												   )
+		                                           .refCnt(1); // automatic reset if
+		// nobody is interested and the value has not been resolved yet
+
+		AtomicBoolean once = new AtomicBoolean();
+		Mono.defer(() -> {
+			if (!once.getAndSet(true)) {
+				return Mono.error(new RuntimeException());
+			}
+
+			return Mono.just("");
+		})
+		    .cache2() // for the first erro cached inside the operator
+		.subscribe();
+		.reset() // it makes no effect on the function
+		.subscribe(); // for secode time we get value("")
+
+//		connectable.valueIfResolved(); TODO: remove it
+		connectable.reset();
+		connectable.connect(); // manual connect to the source if it is not yet connected
+		connectable.refCnt(); // disconnects when there are no interested subscribers
 	}
 
 	/**
