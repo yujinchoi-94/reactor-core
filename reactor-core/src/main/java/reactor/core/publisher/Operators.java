@@ -1740,12 +1740,14 @@ public abstract class Operators {
 
 		protected final CoreSubscriber<? super O> actual;
 
+		private static final Object CANCELLED_TOMBSTONE = new Object();
+
 		/**
 		 * The value stored by this Mono operator. Strongly prefer using {@link #setValue(Object)}
 		 * rather than direct writes to this field, when possible.
 		 */
 		@Nullable
-		protected O   value;
+		protected volatile O   value;
 		volatile  int state; //see STATE field updater
 
 		public MonoSubscriber(CoreSubscriber<? super O> actual) {
@@ -1754,8 +1756,7 @@ public abstract class Operators {
 
 		@Override
 		public void cancel() {
-			O v = value;
-			value = null;
+			O v = (O) VALUE.getAndSet(this, (O) CANCELLED_TOMBSTONE);
 			STATE.set(this, CANCELLED);
 			discard(v);
 		}
@@ -1799,9 +1800,8 @@ public abstract class Operators {
 					state = this.state;
 				}
 
-				// if state is >= HAS_CANCELLED or bit zero is set (*_HAS_VALUE) case, return
-				if ((state & ~HAS_REQUEST_NO_VALUE) != 0) {
-					this.value = null;
+				if (state  == CANCELLED) {
+					VALUE.lazySet(this, CANCELLED_TOMBSTONE);
 					discard(v);
 					return;
 				}
@@ -1896,7 +1896,7 @@ public abstract class Operators {
 					}
 					if (s == NO_REQUEST_HAS_VALUE && STATE.compareAndSet(this, NO_REQUEST_HAS_VALUE, HAS_REQUEST_HAS_VALUE)) {
 						O v = value;
-						if (v != null) {
+						if (v != null && v != CANCELLED_TOMBSTONE) {
 							value = null;
 							Subscriber<? super O> a = actual;
 							a.onNext(v);
@@ -1928,11 +1928,9 @@ public abstract class Operators {
 		 * @see #complete(Object)
 		 */
 		public void setValue(@Nullable O value) {
-			if (STATE.get(this) == CANCELLED) {
+			if (STATE.get(this) == CANCELLED || !VALUE.compareAndSet(this, null, value)) {
 				discard(value);
-				return;
 			}
-			this.value = value;
 		}
 
 		@Override
@@ -1943,38 +1941,40 @@ public abstract class Operators {
 		/**
 		 * Indicates this Subscription has no value and not requested yet.
 		 */
-		static final int NO_REQUEST_NO_VALUE   = 0;
+		static final int NO_REQUEST_NO_VALUE   = 0b000000;
 		/**
 		 * Indicates this Subscription has a value but not requested yet.
 		 */
-		static final int NO_REQUEST_HAS_VALUE  = 1;
+		static final int NO_REQUEST_HAS_VALUE  = 0b000001;
 		/**
 		 * Indicates this Subscription has been requested but there is no value yet.
 		 */
-		static final int HAS_REQUEST_NO_VALUE  = 2;
+		static final int HAS_REQUEST_NO_VALUE  = 0b000010;
 		/**
 		 * Indicates this Subscription has both request and value.
 		 */
-		static final int HAS_REQUEST_HAS_VALUE = 3;
+		static final int HAS_REQUEST_HAS_VALUE = 0b000011;
 		/**
 		 * Indicates the Subscription has been cancelled.
 		 */
-		static final int CANCELLED = 4;
+		static final int CANCELLED = 0b000100;
 		/**
 		 * Indicates this Subscription is in fusion mode and is currently empty.
 		 */
-		static final int FUSED_EMPTY    = 8;
+		static final int FUSED_EMPTY    = 0b001000;
 		/**
 		 * Indicates this Subscription is in fusion mode and has a value.
 		 */
-		static final int FUSED_READY    = 16;
+		static final int FUSED_READY    = 0b010000;
 		/**
 		 * Indicates this Subscription is in fusion mode and its value has been consumed.
 		 */
-		static final int FUSED_CONSUMED = 32;
+		static final int FUSED_CONSUMED = 0b100000;
 		@SuppressWarnings("rawtypes")
 		static final AtomicIntegerFieldUpdater<MonoSubscriber> STATE =
 				AtomicIntegerFieldUpdater.newUpdater(MonoSubscriber.class, "state");
+		static final AtomicReferenceFieldUpdater<MonoSubscriber, Object> VALUE =
+				AtomicReferenceFieldUpdater.newUpdater(MonoSubscriber.class, Object.class, "value");
 	}
 
 
