@@ -9788,6 +9788,11 @@ public abstract class Flux<T> implements CorePublisher<T> {
 		return windowTimeout(maxSize, maxTime , Schedulers.parallel());
 	}
 
+	public final Flux<Flux<T>> windowTimeout(int maxSize, Duration maxTime,
+			boolean fairBackpressure) {
+		return windowTimeout(maxSize, maxTime , Schedulers.parallel(), true);
+	}
+
 	/**
 	 * Split this {@link Flux} sequence into multiple {@link Flux} windows containing
 	 * {@code maxSize} elements (or less for the final window) and starting from the first item.
@@ -9815,7 +9820,11 @@ public abstract class Flux<T> implements CorePublisher<T> {
 	 * @return a {@link Flux} of {@link Flux} windows based on element count and duration
 	 */
 	public final Flux<Flux<T>> windowTimeout(int maxSize, Duration maxTime, Scheduler timer) {
-		return onAssembly(new FluxWindowTimeout<>(this, maxSize, maxTime.toNanos(), TimeUnit.NANOSECONDS, timer));
+		return windowTimeout(maxSize, maxTime, timer, false);
+	}
+
+	public final Flux<Flux<T>> windowTimeout(int maxSize, Duration maxTime, Scheduler timer, boolean fairBackpressure) {
+		return onAssembly(new FluxWindowTimeout<>(this, maxSize, maxTime.toNanos(), TimeUnit.NANOSECONDS, timer, fairBackpressure));
 	}
 
 	/**
