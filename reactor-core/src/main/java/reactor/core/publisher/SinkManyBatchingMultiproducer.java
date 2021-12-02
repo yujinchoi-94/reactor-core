@@ -16,10 +16,12 @@
 
 package reactor.core.publisher;
 
-import java.util.Deque;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.function.Consumer;
+
+import reactor.util.concurrent.Queues;
 
 /**
  * A wrapper around a {@link Sinks.Many}, with a similar API focusing on tryEmit methods
@@ -38,7 +40,7 @@ import java.util.function.Consumer;
 public final class SinkManyBatchingMultiproducer<T> implements Sinks.SinksMultiproducer<T> {
 
 	final Sinks.Many<T>       delegate;
-	final Deque<T>            workQueue;
+	final Queue<T>            workQueue;
 	final Consumer<? super T> clearConsumer;
 
 	volatile     int                                                      state;
@@ -51,6 +53,112 @@ public final class SinkManyBatchingMultiproducer<T> implements Sinks.SinksMultip
 	static final int MASK_WIP = 0b00111111_11111111_11111111_11111111;
 	static final int WIP_CANCELLED = -1;
 	static final int WIP_TERMINATED = -2;
+
+	public SinkManyBatchingMultiproducer(Sinks.Many<T> delegate, Consumer<? super T> clearConsumer) {
+		this.delegate = delegate;
+		this.clearConsumer = clearConsumer;
+		this.workQueue = Queues.<T>unboundedMultiproducer().get();
+	}
+
+	//TODO document that now the only contention we care about is termination vs emit/drain
+	//as soon as the submitted onNext have been processed, terminate will be taken into account
+
+	@Override
+	public Sinks.EmitResult tryEmitComplete() {
+		if (state != 0) {
+			return Sinks.EmitResult.FAIL_NON_SERIALIZED;
+		}
+		Sinks.EmitResult result = delegate.tryEmitComplete();
+		if (result.isSuccess()) {
+			if (markTerminated(this)) {
+				clearRemaining();
+			}
+		}
+		return result;
+	}
+	@Override
+	public Sinks.EmitResult tryEmitError(Throwable t) {
+		if (state != 0) {
+			return Sinks.EmitResult.FAIL_NON_SERIALIZED;
+		}
+		Sinks.EmitResult result = delegate.tryEmitError(t);
+		if (result.isSuccess()) {
+			if (markTerminated(this)) {
+				clearRemaining();
+			}
+		}
+		return result;
+	}
+
+	@Override
+	public int currentSubscriberCount() {
+		return delegate.currentSubscriberCount();
+	}
+
+	@Override
+	public Flux<T> asFlux() {
+		return delegate.asFlux();
+	}
+
+	void clearRemaining() {
+		T element = workQueue.poll();
+		while (element != null) {
+			this.clearConsumer.accept(element);
+			element = workQueue.poll();
+		}
+	}
+
+	@Override
+	public Sinks.MultiproducerEmitResult<T> trySubmitNext(T value) {
+		if (isTerminated(STATE.get(this))) {
+			return new Sinks.MultiproducerEmitResult<>(Sinks.EmitResult.FAIL_TERMINATED, value);
+		}
+		else if (isCancelled(STATE.get(this))) {
+			return new Sinks.MultiproducerEmitResult<>(Sinks.EmitResult.FAIL_CANCELLED, value);
+		}
+
+		int wip = getAndIncrementWip(this);
+		if (wip == WIP_CANCELLED) {
+			return new Sinks.MultiproducerEmitResult<>(Sinks.EmitResult.FAIL_CANCELLED, value);
+		}
+		else if (wip == WIP_TERMINATED) {
+			return new Sinks.MultiproducerEmitResult<>(Sinks.EmitResult.FAIL_TERMINATED, value);
+		}
+		workQueue.add(value);
+		if (wip == 0) {
+			do {
+				T polled = workQueue.poll();
+				while (polled != null) {
+					Sinks.EmitResult polledResult = delegate.tryEmitNext(polled);
+					if (polledResult == Sinks.EmitResult.FAIL_CANCELLED) {
+						if (markCancelled(this)) {
+							clearRemaining();
+						}
+						return new Sinks.MultiproducerEmitResult<>(polledResult, polled);
+					}
+					else if (polledResult == Sinks.EmitResult.FAIL_TERMINATED) {
+						if (markTerminated(this)) {
+							clearRemaining();
+						}
+						return new Sinks.MultiproducerEmitResult<>(polledResult, polled);
+					}
+					else if (polledResult.isFailure()) {
+						markNoWip(this);
+						return new Sinks.MultiproducerEmitResult<>(polledResult, polled);
+					}
+					else {
+						polled = workQueue.poll();
+					}
+				}
+			}
+			while (decrementAndGetWip(this) > 0);
+			return new Sinks.MultiproducerEmitResult<>(Sinks.EmitResult.OK, null);
+		}
+		else {
+			return new Sinks.MultiproducerEmitResult<>(Sinks.EmitResult.SUBMITTED_TO_BATCH, null);
+		}
+	}
+
 
 	static boolean isCancelled(int state) {
 		return (state & FLAG_CANCELLED) == FLAG_CANCELLED;
@@ -142,108 +250,6 @@ public final class SinkManyBatchingMultiproducer<T> implements Sinks.SinksMultip
 			if (STATE.compareAndSet(instance, state, newState)) {
 				return newWip;
 			}
-		}
-	}
-
-	public SinkManyBatchingMultiproducer(Sinks.Many<T> delegate, Consumer<? super T> clearConsumer) {
-		this.delegate = delegate;
-		this.clearConsumer = clearConsumer;
-		this.workQueue = new ConcurrentLinkedDeque<>();
-	}
-
-	//TODO document that now the only contention we care about is termination vs emit/drain
-	//as soon as the submitted onNext have been processed, terminate will be taken into account
-
-	@Override
-	public Sinks.EmitResult tryEmitComplete() {
-		if (state != 0) {
-			return Sinks.EmitResult.FAIL_NON_SERIALIZED;
-		}
-		Sinks.EmitResult result = delegate.tryEmitComplete();
-		if (result.isSuccess()) {
-			if (markTerminated(this)) {
-				clearRemaining();
-			}
-		}
-		return result;
-	}
-	@Override
-	public Sinks.EmitResult tryEmitError(Throwable t) {
-		if (state != 0) {
-			return Sinks.EmitResult.FAIL_NON_SERIALIZED;
-		}
-		Sinks.EmitResult result = delegate.tryEmitError(t);
-		if (result.isSuccess()) {
-			if (markTerminated(this)) {
-				clearRemaining();
-			}
-		}
-		return result;
-	}
-
-	@Override
-	public int currentSubscriberCount() {
-		return delegate.currentSubscriberCount();
-	}
-
-	@Override
-	public Flux<T> asFlux() {
-		return delegate.asFlux();
-	}
-
-	void clearRemaining() {
-		this.workQueue.forEach(this.clearConsumer::accept);
-		this.workQueue.clear();
-	}
-
-	@Override
-	public Sinks.MultiproducerEmitResult<T> trySubmitNext(T value) {
-		if (isTerminated(STATE.get(this))) {
-			return new Sinks.MultiproducerEmitResult<>(Sinks.EmitResult.FAIL_TERMINATED, value);
-		}
-		else if (isCancelled(STATE.get(this))) {
-			return new Sinks.MultiproducerEmitResult<>(Sinks.EmitResult.FAIL_CANCELLED, value);
-		}
-
-		int wip = getAndIncrementWip(this);
-		if (wip == WIP_CANCELLED) {
-			return new Sinks.MultiproducerEmitResult<>(Sinks.EmitResult.FAIL_CANCELLED, value);
-		}
-		else if (wip == WIP_TERMINATED) {
-			return new Sinks.MultiproducerEmitResult<>(Sinks.EmitResult.FAIL_TERMINATED, value);
-		}
-		workQueue.add(value);
-		if (wip == 0) {
-			do {
-				T polled = workQueue.pollFirst();
-				while (polled != null) {
-					Sinks.EmitResult polledResult = delegate.tryEmitNext(polled);
-					if (polledResult == Sinks.EmitResult.FAIL_CANCELLED) {
-						if (markCancelled(this)) {
-							clearRemaining();
-						}
-						return new Sinks.MultiproducerEmitResult<>(polledResult, polled);
-					}
-					else if (polledResult == Sinks.EmitResult.FAIL_TERMINATED) {
-						if (markTerminated(this)) {
-							clearRemaining();
-						}
-						return new Sinks.MultiproducerEmitResult<>(polledResult, polled);
-					}
-					else if (polledResult.isFailure()) {
-						markNoWip(this);
-						return new Sinks.MultiproducerEmitResult<>(polledResult, polled);
-					}
-					else {
-						polled = workQueue.pollFirst();
-					}
-				}
-			}
-			while (decrementAndGetWip(this) > 0);
-			return new Sinks.MultiproducerEmitResult<>(Sinks.EmitResult.OK, null);
-		}
-		else {
-			return new Sinks.MultiproducerEmitResult<>(Sinks.EmitResult.SUBMITTED_TO_BATCH, null);
 		}
 	}
 
