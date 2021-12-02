@@ -17,7 +17,10 @@
 package reactor.core.publisher;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.Queue;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.reactivestreams.Subscriber;
 
@@ -107,6 +110,20 @@ public final class Sinks {
 	}
 
 	/**
+	 * Wrap an  {@link Sinks#unsafe() unsafe} {@link Many} sink into a {@link SinksMultiproducer},
+	 * which attempts to reduce contention when used from multiple threads by batching onNext emissions.
+	 *
+	 * @param sinkSpec a {@link Function} to choose any underlying {@link Many} from the {@link #unsafe()} spec
+	 * @param cleaner a {@link Consumer} applied to clear remainder of the current batch when the sink is terminated or cancelled
+	 * @param <T> the type of values that the sink can emit
+	 * @return a new {@link SinksMultiproducer} which batches onNext
+	 */
+	public static <T> SinksMultiproducer<T> batchingMultiproducer(
+		Function<ManySpec, Many<T>> sinkSpec, Consumer<? super T> cleaner) {
+		return new SinkManyBatchingMultiproducer<>(sinkSpec.apply(unsafe().many()), cleaner);
+	}
+
+	/**
 	 * Represents the immediate result of an emit attempt (eg. in {@link Sinks.Many#tryEmitNext(Object)}.
 	 * This does not guarantee that a signal is consumed, it simply refers to the sink state when an emit method is invoked.
 	 * This is a particularly important distinction with regard to {@link #FAIL_CANCELLED} which means the sink is -now-
@@ -119,6 +136,11 @@ public final class Sinks {
 		 * Has successfully emitted the signal
 		 */
 		OK,
+		/**
+		 * Has submitted the signal to a batch, which might get processed by another thread / another sink call.
+		 * Considered a success for the purpose of {@link #isSuccess()}.
+		 */
+		SUBMITTED_TO_BATCH,
 		/**
 		 * Has failed to emit the signal because the sink was previously terminated successfully or with an error
 		 */
@@ -144,18 +166,19 @@ public final class Sinks {
 		/**
 		 * Represents a successful emission of a signal.
 		 * <p>
-		 * This is more future-proof than checking for equality with {@code OK} since
-		 * new OK-like codes could be introduced later.
+		 * This is more future-proof than checking for equality with
+		 * {@link #OK} and {@link #SUBMITTED_TO_BATCH}
+		 * since new OK-like codes could be introduced later.
 		 */
 		public boolean isSuccess() {
-			return this == OK;
+			return this == OK || this == SUBMITTED_TO_BATCH;
 		}
 
 		/**
 		 * Represents a failure to emit a signal.
 		 */
 		public boolean isFailure() {
-			return this != OK;
+			return this != OK && this != SUBMITTED_TO_BATCH;
 		}
 
 		/**
@@ -169,7 +192,7 @@ public final class Sinks {
 		 * @see #orThrowWithCause(Throwable)
 		 */
 		public void orThrow() {
-			if (this == OK) return;
+			if (isSuccess()) return;
 
 			throw new EmissionException(this);
 		}
@@ -184,7 +207,7 @@ public final class Sinks {
 		 * @see #orThrow()
 		 */
 		public void orThrowWithCause(Throwable cause) {
-			if (this == OK) return;
+			if (isSuccess()) return;
 
 			throw new EmissionException(cause, this);
 		}
@@ -1088,5 +1111,85 @@ public final class Sinks {
 		 * @see Subscriber#onComplete()
 		 */
 		void emitValue(@Nullable T value, EmitFailureHandler failureHandler);
+	}
+
+	/**
+	 *
+	 * While not strictly a {@link Many}, the {@link SinksMultiproducer}
+	 * has an API that is pretty close. See {@link SinksMultiproducer#trySubmitNext(Object)}.
+	 *
+	 * @author Simon Baslé
+	 */
+	public static interface SinksMultiproducer<T> {
+
+		EmitResult tryEmitComplete();
+
+		EmitResult tryEmitError(Throwable t);
+
+		int currentSubscriberCount();
+
+		Flux<T> asFlux();
+
+		/**
+		 * //TODO introduction
+		 * <p>
+		 * In case an emission gets rejected in the middle of processing the batch, we need to tell the caller of
+		 * the failure, but also <strong>which</strong> value triggered the failure.
+		 * This value could be a different one from the value initially submitted by this particular caller.
+		 * This is why {@link #trySubmitNext(Object)} returns a {@link Sinks.MultiproducerEmitResult}, which represents both the
+		 * {@link EmitResult} and the value that triggered a failure (if any).
+		 * <p>
+		 * Note that this also means any caller should be able to decide what to do with the value returned in
+		 * the {@link Sinks.MultiproducerEmitResult}, including how to re-submit it if necessary.
+		 * <p>
+		 * <ul>
+		 *     <li>
+		 *         Contended callers will just immediately get a {@link EmitResult#SUBMITTED_TO_BATCH}
+		 *         code in the {@link Sinks.MultiproducerEmitResult} if they could participate in the batch.
+		 *     </li>
+		 *     <li>
+		 *         The work-stealing caller may manage to emit all values in the batch successfully, in which case
+		 *         it will get a {@link EmitResult#OK} code in the {@link Sinks.MultiproducerEmitResult}.
+		 *     </li>
+		 *     <li>
+		 *         In case of failure, the value that couldn't be emitted by the underlying sink is returned along
+		 *         the error code in the {@link Sinks.MultiproducerEmitResult}.
+		 *     </li>
+		 * </ul>
+		 *
+		 * @param value
+		 *
+		 * @return
+		 */
+		MultiproducerEmitResult<T> trySubmitNext(T value);
+	}
+
+	static final class MultiproducerEmitResult<T> {
+
+		final EmitResult batchResult;
+		@Nullable
+		final T                notEmitted;
+
+		public MultiproducerEmitResult(EmitResult batchResult, @Nullable T notEmitted) {
+			this.batchResult = batchResult;
+			this.notEmitted = notEmitted;
+		}
+
+		public EmitResult getBatchResult() {
+			return batchResult;
+		}
+
+		public boolean isBatchSuccess() {
+			return batchResult.isSuccess();
+		}
+
+		/**
+		 * If batch is success, expected to be null.
+		 *
+		 * @return
+		 */
+		public Optional<T> getNotEmitted() {
+			return Optional.ofNullable(notEmitted);
+		}
 	}
 }
