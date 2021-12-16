@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import com.github.benmanes.gradle.versions.updates.resolutionstrategy.ComponentSelectionWithCurrent
 import org.gradle.util.VersionNumber
 import java.text.SimpleDateFormat
 
